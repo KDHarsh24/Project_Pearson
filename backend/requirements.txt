@@ -1,2 +1,8 @@
 fastapi
 uvicorn
+ibm-watsonx-ai
+langchain-ibm
+python-dotenv
+python-multipart
+PyPDF2
+pypdf
