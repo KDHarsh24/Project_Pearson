@@ -26,12 +26,19 @@ logging.basicConfig(level=logging.INFO)
 
 # Crawl settings (updated for /doc/<id>/ range enumeration)
 BASE_URL = "https://indiankanoon.org"
-DOC_START_ID = int(os.getenv("DOC_START_ID", "1"))
-DOC_END_ID = int(os.getenv("DOC_END_ID", str(DOC_START_ID + 1990000)))  # inclusive
+DOC_START_ID = int(os.getenv("DOC_START_ID", "1000000"))
+DOC_END_ID = int(os.getenv("DOC_END_ID", str(DOC_START_ID + 1000002)))  # inclusive
 CHUNK_SIZE = 200
 SLEEP_BETWEEN = float(os.getenv("SLEEP_BETWEEN", "0.8"))
+MAX_SLEEP = float(os.getenv("MAX_SLEEP", "6"))
+RATE_DECAY = float(os.getenv("RATE_DECAY", "0.9"))  # factor to shrink sleep after success
+RATE_GROWTH = float(os.getenv("RATE_GROWTH", "1.5"))  # multiplier on 429
+EXTRA_ON_429 = float(os.getenv("EXTRA_ON_429", "0.2"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 MAX_CONSECUTIVE_FAILS = int(os.getenv("MAX_CONSECUTIVE_FAILS", "30"))
+# Adaptive rate state
+ADAPTIVE_SLEEP = SLEEP_BETWEEN
+RATE_LOCK = threading.Lock()
 
 # IBM embeddings setup (shared across vector store wrapper)
 CREDENTIALS = Credentials(url=IBM_URL, api_key=IBM_API_KEY)
@@ -46,18 +53,37 @@ EMBED_LOCK = threading.Lock()  # protect vector store writes
 
 
 def fetch_case_doc(doc_id: int) -> str:
-    """Fetch a single indiankanoon case page by numeric id. Returns HTML or ''."""
+    """Fetch a single indiankanoon case page by numeric id with adaptive throttling."""
+    global ADAPTIVE_SLEEP
     url = f"{BASE_URL}/doc/{doc_id}/"
+    # Respect current adaptive sleep
+    with RATE_LOCK:
+        current_sleep = ADAPTIVE_SLEEP
+    time.sleep(current_sleep)
     try:
-        time.sleep(SLEEP_BETWEEN)
         resp = requests.get(url, timeout=REQUEST_TIMEOUT, headers={
             "User-Agent": "Mozilla/5.0 (compatible; MikeRossBot/0.1; +https://github.com/)"
         })
         if resp.status_code == 404:
             return ""
+        if resp.status_code == 429:
+            # Increase delay and signal retry miss
+            with RATE_LOCK:
+                ADAPTIVE_SLEEP = min(ADAPTIVE_SLEEP * RATE_GROWTH + EXTRA_ON_429, MAX_SLEEP)
+                new_sleep = ADAPTIVE_SLEEP
+            logging.warning(f"429 received for id {doc_id}. Increasing adaptive sleep to {new_sleep:.2f}s")
+            return ""  # treat as miss -> will retry later if within range logic
         resp.raise_for_status()
+        # Successful fetch: gently decay sleep toward baseline
+        with RATE_LOCK:
+            ADAPTIVE_SLEEP = max(SLEEP_BETWEEN, ADAPTIVE_SLEEP * RATE_DECAY)
         return resp.text
     except Exception as e:
+        # On network errors also back off a little
+        if '429' in str(e):
+            with RATE_LOCK:
+                ADAPTIVE_SLEEP = min(ADAPTIVE_SLEEP * RATE_GROWTH + EXTRA_ON_429, MAX_SLEEP)
+                logging.warning(f"Exception 429 pattern for id {doc_id}; adaptive sleep now {ADAPTIVE_SLEEP:.2f}s")
         logging.error(f"Fetch error for id {doc_id}: {e}")
         return ""
 
