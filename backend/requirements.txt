@@ -4,5 +4,11 @@ ibm-watsonx-ai
 langchain-ibm
 python-dotenv
 python-multipart
-PyPDF2
 pypdf
+ibm-watson
+ibm-cloud-sdk-core
+pymilvus
+ibm-watsonx-ai
+langchain-ibm
+langchain
+bs4
