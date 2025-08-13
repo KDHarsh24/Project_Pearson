@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 # Crawl settings (updated for /doc/<id>/ range enumeration)
 BASE_URL = "https://indiankanoon.org"
 DOC_START_ID = int(os.getenv("DOC_START_ID", "1000000"))
-DOC_END_ID = int(os.getenv("DOC_END_ID", str(DOC_START_ID + 1000002)))  # inclusive
+DOC_END_ID = int(os.getenv("DOC_END_ID", str(DOC_START_ID + 1000)))  # inclusive
 CHUNK_SIZE = 200
 SLEEP_BETWEEN = float(os.getenv("SLEEP_BETWEEN", "0.8"))
 MAX_SLEEP = float(os.getenv("MAX_SLEEP", "6"))

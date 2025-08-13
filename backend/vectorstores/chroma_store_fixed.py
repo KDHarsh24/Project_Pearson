@@ -1,46 +1,29 @@
 import os
 import time
 import logging
-import uuid
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from chromadb import PersistentClient
 from ibm_watsonx_ai.foundation_models.embeddings import Embeddings
 from ibm_watsonx_ai import Credentials
 from dotenv import load_dotenv
 
-# Try to load .env from multiple locations
-import os
-current_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.dirname(current_dir)
-project_dir = os.path.dirname(backend_dir)
+load_dotenv()
 
-# Try different .env locations
-for env_path in [
-    os.path.join(backend_dir, '.env'),
-    os.path.join(project_dir, '.env'),
-    '.env'
-]:
-    if os.path.exists(env_path):
-        load_dotenv(env_path)
-        break
-else:
-    load_dotenv()  # fallback
-
-WATSONX_API_KEY = os.getenv("WATSONX_API_KEY")
-WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
-WATSONX_URL = os.getenv("WATSONX_URL")
+IBM_API_KEY = os.getenv("WATSONX_API_KEY")
+IBM_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
+IBM_URL = os.getenv("WATSONX_URL")
 VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "legal_cases_store")
 
-if not all([WATSONX_API_KEY, WATSONX_PROJECT_ID, WATSONX_URL]):
-    raise ValueError("Missing WATSONX credentials in .env")
+if not all([IBM_API_KEY, IBM_PROJECT_ID, IBM_URL]):
+    raise ValueError("Missing IBM credentials in .env")
 
-CREDENTIALS = Credentials(url=WATSONX_URL, api_key=WATSONX_API_KEY)
+CREDENTIALS = Credentials(url=IBM_URL, api_key=IBM_API_KEY)
 
 
 def build_embeddings_model(model_id: str = "ibm/slate-30m-english-rtrvr") -> Embeddings:
     return Embeddings(
         model_id=model_id,
-        project_id=WATSONX_PROJECT_ID,
+        project_id=IBM_PROJECT_ID,
         credentials=CREDENTIALS
     )
 
@@ -52,44 +35,17 @@ class ChromaVectorStore:
         self.emb = embedding_model or build_embeddings_model()
         self.collection_name = collection_name
 
-    def add_texts(self, texts: List[str], metadatas: Optional[List[Dict[str, Any]]] = None, ids: Optional[List[str]] = None):
-        """Add texts to the vector store with embeddings."""
+    def add_texts(self, texts: List[str], metadatas: List[Dict[str, Any]] | None = None, ids: List[str] | None = None):
         if not texts:
             return []
-        
-        # Generate embeddings
-        try:
-            vectors = self.emb.embed_documents(texts)
-        except Exception as e:
-            logging.error(f"Embedding failed: {e}")
-            raise e
-        
-        # Generate IDs if not provided
+        vectors = self.emb.embed_documents(texts)
+        ts = int(time.time())
         if ids is None:
-            ts = int(time.time() * 1000)  # millisecond timestamp
-            ids = [f"{self.collection_name}_{ts}_{i}_{str(uuid.uuid4())[:8]}" for i in range(len(texts))]
-        
-        # Ensure metadata exists
+            ids = [f"doc_{ts}_{i}" for i in range(len(texts))]
         if metadatas is None:
-            metadatas = [{"chunk_index": i, "timestamp": ts} for i in range(len(texts))]
-        
-        # Validate lengths match
-        if len(texts) != len(vectors) or len(texts) != len(ids) or len(texts) != len(metadatas):
-            raise ValueError(f"Length mismatch: texts={len(texts)}, vectors={len(vectors)}, ids={len(ids)}, metadatas={len(metadatas)}")
-        
-        # Add to Chroma
-        try:
-            self.collection.add(
-                ids=ids, 
-                embeddings=vectors, 
-                documents=texts, 
-                metadatas=metadatas
-            )
-            logging.info(f"Successfully added {len(texts)} documents to {self.collection_name}")
-            return ids
-        except Exception as e:
-            logging.error(f"Failed to add documents to Chroma: {e}")
-            raise e
+            metadatas = [{} for _ in texts]
+        self.collection.add(ids=ids, embeddings=vectors, documents=texts, metadatas=metadatas)
+        return ids
 
     def similarity_search(self, query: str, k: int = 5):
         """Return list of dictionaries: {text, metadata, distance, score}."""

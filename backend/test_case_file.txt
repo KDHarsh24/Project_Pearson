@@ -1,0 +1,75 @@
+EMPLOYMENT CONTRACT DISPUTE
+CASE FILE: Smith v. TechCorp Industries
+
+BACKGROUND:
+John Smith was employed as Senior Software Engineer at TechCorp Industries from January 2020 to March 2024. His employment contract contained a non-compete clause preventing him from working for competitors for 18 months post-termination.
+
+FACTS:
+1. Smith's employment contract dated January 15, 2020, included:
+   - Salary: $120,000 annually
+   - Non-compete period: 18 months
+   - Confidentiality obligations
+   - Intellectual property assignment clause
+
+2. On February 1, 2024, Smith received written warning for "inadequate performance" despite receiving "exceeds expectations" ratings in previous reviews.
+
+3. March 10, 2024: Smith was terminated for "poor performance and violation of company policies."
+
+4. March 15, 2024: Smith immediately joined competitor StartupTech as Lead Engineer with $150,000 salary.
+
+5. TechCorp claims Smith:
+   - Violated non-compete agreement
+   - Took proprietary source code
+   - Solicited TechCorp clients for StartupTech
+
+WITNESS STATEMENTS:
+
+Sarah Johnson (HR Director): "Smith's performance declined significantly in late 2023. We documented multiple instances of missed deadlines and poor code quality. The termination was performance-based, not retaliatory."
+
+Mike Chen (Former Colleague): "John was one of our best engineers. His 'performance issues' only started after he questioned the new overtime policies in December 2023. The company wanted him gone."
+
+Lisa Rodriguez (Project Manager): "Smith had access to our core algorithms and client database. On his last day, I saw him copying files to a USB drive. When I asked, he said it was 'personal projects.'"
+
+LEGAL ISSUES:
+1. Enforceability of non-compete clause in California
+2. Wrongful termination claim
+3. Trade secret misappropriation allegations
+4. Retaliatory discharge
+
+EVIDENCE:
+- Employment contract with non-compete clause
+- Performance reviews (2020-2023: all positive, 2024: negative)
+- Email warnings about performance
+- Computer access logs showing file transfers
+- StartupTech job offer dated March 12, 2024 (before termination)
+
+SMITH'S POSITION:
+- Termination was retaliatory for questioning overtime policies
+- Non-compete is unenforceable under California law
+- No trade secrets were taken - only personal code snippets
+- Performance decline was due to hostile work environment
+
+TECHCORP'S POSITION:
+- Legitimate performance-based termination
+- Smith violated non-compete and confidentiality obligations
+- Proprietary algorithms were stolen
+- Client solicitation caused business harm
+
+RELEVANT STATUTES:
+- California Business and Professions Code Section 16600 (non-compete prohibition)
+- California Labor Code Section 1102.5 (whistleblower protection)
+- Uniform Trade Secrets Act
+- Computer Fraud and Abuse Act
+
+DAMAGES CLAIMED:
+TechCorp seeks:
+- Injunctive relief preventing Smith from working at StartupTech
+- $500,000 in lost profits
+- Return of allegedly stolen trade secrets
+- Attorney fees
+
+Smith counterclaims:
+- Wrongful termination damages: $200,000
+- Emotional distress: $50,000
+- Attorney fees
+- Punitive damages for retaliation

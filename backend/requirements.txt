@@ -3,7 +3,7 @@ uvicorn
 ibm-watsonx-ai
 langchain-ibm
 langchain
-langchain-chroma  # needed for watsonx ChromaVectorStore adapter
+langchain-chroma
 python-dotenv
 python-multipart
 pypdf
@@ -17,3 +17,7 @@ sqlalchemy
 networkx
 tqdm
 orjson
+matplotlib
+numpy
+plotly
+pandas

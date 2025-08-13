@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
-from vectorstores.chroma_store import ChromaVectorStore, build_embeddings_model
 import os
+from vectorstores.chroma_store import ChromaVectorStore
 
 CASE_FILES_COLLECTION = os.getenv("CASE_FILES_COLLECTION", "case_files")
 CASE_LAW_COLLECTION = os.getenv("CASE_LAW_COLLECTION", "legal_cases")
@@ -10,7 +10,6 @@ case_law_store = ChromaVectorStore(collection_name=CASE_LAW_COLLECTION)
 
 
 def hybrid_search(query: str, k_case_files: int = 3, k_case_law: int = 3, filters: Dict[str, Any] | None = None) -> Dict[str, List[Dict]]:
-    """Retrieve from both user-uploaded case files and crawled case law with optional metadata filters."""
     case_files_hits = case_files_store.similarity_search(query, k=k_case_files)
     case_law_hits = case_law_store.similarity_search(query, k=k_case_law)
     if filters:

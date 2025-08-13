@@ -4,12 +4,25 @@ import hashlib
 from typing import List, Dict
 from pypdf import PdfReader
 from fastapi import UploadFile
-from .text_utils import chunk_text
 from vectorstores.chroma_store import ChromaVectorStore
 from db.database import SessionLocal
 from db.models import Document, Chunk
 import json
-from services.enrichment import enrich_document, enrich_chunk
+
+def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 100) -> List[str]:
+    """Simple text chunking utility"""
+    if len(text) <= chunk_size:
+        return [text]
+    
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        start = end - overlap
+    
+    return chunks
 
 CASE_FILES_COLLECTION = os.getenv("CASE_FILES_COLLECTION", "case_files")
 case_files_store = ChromaVectorStore(collection_name=CASE_FILES_COLLECTION)
@@ -24,7 +37,7 @@ try:
 except ImportError:
     _DOCX_AVAILABLE = False
 
-MAX_DOC_LENGTH = 50_000  # safety cutoff
+MAX_DOC_LENGTH = 50_000
 RAW_DIR = os.getenv("RAW_STORAGE", "storage/raw")
 CURATED_DIR = os.getenv("CURATED_STORAGE", "storage/curated")
 os.makedirs(RAW_DIR, exist_ok=True)
@@ -71,14 +84,15 @@ def ingest_upload(file: UploadFile) -> Dict:
     if not os.path.exists(raw_path):
         with open(raw_path, "wb") as f:
             f.write(raw)
-    # Enrichment (document level)
-    doc_meta_enriched, _ = enrich_document(text, filename)
-    # Chunk
-    chunks = chunk_text(text, size=3000, overlap=250)
+    
+    # Simple document metadata without enrichment
+    doc_meta_enriched = {"filename": filename, "content_type": content_type}
+    chunks = chunk_text(text, chunk_size=3000, overlap=250)
     metadatas = []
     chunk_meta_jsons = []
     for i, ch in enumerate(chunks):
-        per_chunk = enrich_chunk(ch, doc_meta_enriched)
+        # Simple chunk metadata without enrichment
+        per_chunk = {"chunk_text": ch[:100] + "...", "chunk_length": len(ch)}
         base_meta = {"filename": filename, "hash": file_hash, "chunk_index": i, "source_type": source_type}
         base_meta.update(per_chunk)
         metadatas.append(base_meta)
@@ -113,7 +127,6 @@ def ingest_upload(file: UploadFile) -> Dict:
 
 
 def ingest_crawled_case(case_id: str, text: str, source_url: str) -> Dict:
-    """Ingest a crawled case law document (already plain text)."""
     raw_bytes = text.encode("utf-8", errors="ignore")
     file_hash = _hash_bytes(raw_bytes)
     filename = f"case_{case_id}.txt"
@@ -122,12 +135,15 @@ def ingest_crawled_case(case_id: str, text: str, source_url: str) -> Dict:
     if not os.path.exists(raw_path):
         with open(raw_path, "wb") as f:
             f.write(raw_bytes)
-    doc_meta_enriched, _ = enrich_document(text, filename)
-    chunks = chunk_text(text, size=3000, overlap=250)
+    
+    # Simple document metadata without enrichment
+    doc_meta_enriched = {"filename": filename, "case_id": case_id, "source_url": source_url}
+    chunks = chunk_text(text, chunk_size=3000, overlap=250)
     metadatas = []
     chunk_meta_jsons = []
     for i, ch in enumerate(chunks):
-        per_chunk = enrich_chunk(ch, doc_meta_enriched)
+        # Simple chunk metadata without enrichment
+        per_chunk = {"chunk_text": ch[:100] + "...", "chunk_length": len(ch)}
         base_meta = {"filename": filename, "hash": file_hash, "chunk_index": i, "source_type": "crawl_case_law", "url": source_url}
         base_meta.update(per_chunk)
         metadatas.append(base_meta)
