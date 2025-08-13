@@ -2,7 +2,18 @@ fastapi
 uvicorn
 ibm-watsonx-ai
 langchain-ibm
+langchain
+langchain-chroma  # needed for watsonx ChromaVectorStore adapter
 python-dotenv
 python-multipart
-PyPDF2
 pypdf
+ibm-watson
+ibm-cloud-sdk-core
+requests
+bs4
+chromadb
+python-docx
+sqlalchemy
+networkx
+tqdm
+orjson
