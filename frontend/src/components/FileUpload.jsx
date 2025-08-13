@@ -1,18 +1,19 @@
 import React, { useState, useRef } from "react";
-import { Upload, X, Check, ArrowRight, Plus, FileText } from "lucide-react";
+import { useCaseChat } from './chat/useCaseChat';
+import { UploadArea } from './chat/UploadArea';
+import { ModuleBar } from './chat/ModuleBar';
+import { ChatInput } from './chat/ChatInput';
+import { Messages } from './chat/Messages';
+import { apiJoin } from '../config/api';
 
 export default function DocumentUploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [selectedModule, setSelectedModule] = useState(null);
+  const [uploadedDocsMeta, setUploadedDocsMeta] = useState([]);
+  const [caseType, setCaseType] = useState('General Legal');
   const fileInputRef = useRef(null);
-
-  const modules = [
-    { id: "analysis", title: "Analysis", icon: "📊" },
-    { id: "summarize", title: "Summarize", icon: "📝" },
-    { id: "translate", title: "Translate", icon: "🌍" },
-    { id: "extract", title: "Extract", icon: "🔍" },
-  ];
+  const { selectedModule, setSelectedModule, caseTitle, messages, input, setInput, loading, error, analysisRef, modules, sendMessage } = useCaseChat();
+  const hasAssistant = messages.some(m=> m.role==='assistant');
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -38,15 +39,15 @@ export default function DocumentUploadPage() {
     }
   };
 
-  const handleFileSelect = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const newFile = {
-        id: Date.now(),
-        file: e.target.files[0],
-      };
-      setUploadedFiles((prev) => [...prev, newFile]);
-      // Reset input
-      e.target.value = "";
+  const handleFileSelect = async (e) => {
+    if (e.target.files && e.target.files.length) {
+      const fileList = Array.from(e.target.files);
+      for (const file of fileList) {
+        const newFile = { id: Date.now() + Math.random(), file };
+        setUploadedFiles((prev) => [...prev, newFile]);
+  await uploadDocument(file);
+      }
+      e.target.value = ""; // reset
     }
   };
 
@@ -54,23 +55,24 @@ export default function DocumentUploadPage() {
     setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
-  const handleContinue = () => {
-    if (selectedModule) {
-      console.log("Processing documents:", uploadedFiles.map((f) => f.file.name));
-      console.log("Selected module:", selectedModule);
-      console.log("Number of files:", uploadedFiles.length);
-      if (uploadedFiles.length > 0) {
-        console.log(
-          "File details:",
-          uploadedFiles.map((f) => ({
-            name: f.file.name,
-            size: f.file.size,
-            type: f.file.type,
-          }))
-        );
-      } else {
-        console.log("Proceeding without documents");
+  const uploadDocument = async (file) => {
+    try {
+      let active = localStorage.getItem('case_title');
+      if (!active) {
+        const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+        active = `case-guid-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
+        localStorage.setItem('case_title', active);
       }
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('case_title', active);
+      formData.append('case_type', caseType);
+      const res = await fetch(apiJoin('/upload-document'), { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      setUploadedDocsMeta(prev => [...prev, data]);
+    } catch (e) {
+      console.error('Document upload failed', e);
     }
   };
 
@@ -83,150 +85,88 @@ export default function DocumentUploadPage() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-white flex flex-col">
       {/* Main Content */}
       <div className="flex-1">
         <div className="border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-6 py-4">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Document Processing
-            </h1>
+          <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3">
+            <img src={require('../image/mikeross.webp')} alt="Logo" className="h-9 w-9" />
+            <h1 className="text-2xl font-semibold text-gray-900">Mike Ross</h1>
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto px-6 py-8">
-          {/* Upload Area - Always Visible */}
-          <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
-              Upload Documents {uploadedFiles.length > 0 && `(${uploadedFiles.length})`}
-            </h2>
-            
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-6 ${
-                dragActive
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 hover:border-gray-400"
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Case Type</label>
+            <select
+              value={caseType}
+              onChange={e=>setCaseType(e.target.value)}
+              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-400"
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={handleFileSelect}
-                accept=".pdf,.doc,.docx,.txt,.md"
-                multiple
-              />
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Upload className="w-6 h-6 text-gray-400" />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-lg font-medium text-gray-900">
-                    Drop your documents here
-                  </p>
-                  <p className="text-gray-500 text-sm">or</p>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="mt-2 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Browse Files
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400">PDF, DOC, DOCX, TXT, MD (Multiple files supported)</p>
-              </div>
-            </div>
-
-            {/* Uploaded Files List */}
-            {uploadedFiles.length > 0 && (
-              <div className="max-h-48 overflow-y-auto space-y-3 pr-2">
-                {uploadedFiles.map((fileObj) => (
-                  <div
-                    key={fileObj.id}
-                    className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg border border-green-200"
-                  >
-                    <FileText className="w-5 h-5 text-green-600" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {fileObj.file.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatFileSize(fileObj.file.size)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => removeFile(fileObj.id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+              <option>General Legal</option>
+              <option>Civil</option>
+              <option>Criminal</option>
+              <option>Corporate</option>
+              <option>Family</option>
+              <option>Tax</option>
+            </select>
           </div>
-
-          {/* Instructions */}
-          <div className="text-center text-gray-600 mb-0">
-            <p className="text-sm">
-              Upload documents above or select a processing module below to continue
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Module Selection Bar - Always Visible */}
-      <div className="border-t border-gray-200 bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center space-x-2 p-3 font-extrabold text-black border border-black rounded-full hover:bg-blue-50 transition-colors"
-              title="Add Document"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            
-            {/* Module Buttons */}
-            <div className="flex space-x-3 flex-1">
-              {modules.map((module) => (
-                <button
-                  key={module.id}
-                  onClick={() => setSelectedModule(module.id)}
-                  className={`flex items-center space-x-2 px-4 py-3 rounded-lg border-2 transition-all flex-1 justify-center ${
-                    selectedModule === module.id
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="text-lg">{module.icon}</span>
-                  <span className="font-medium text-sm">{module.title}</span>
-                </button>
+          {!hasAssistant && (
+            <UploadArea
+              dragActive={dragActive}
+              handleDrag={handleDrag}
+              handleDrop={handleDrop}
+              fileInputRef={fileInputRef}
+              handleFileSelect={handleFileSelect}
+              uploadedFiles={uploadedFiles}
+              removeFile={removeFile}
+            />
+          )}
+          {hasAssistant && (
+            // Hidden file input for plus button after initial upload area is removed
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileSelect}
+              accept=".pdf,.doc,.docx,.txt,.md"
+              multiple
+            />
+          )}
+          {uploadedDocsMeta.length > 0 && (
+            <div className="mt-4 text-xs text-gray-600 space-y-1">
+              {uploadedDocsMeta.map(doc => (
+                <div key={doc.document_id || doc.filename} className="flex items-center justify-between border rounded px-2 py-1">
+                  <span className="truncate mr-2" title={doc.filename}>{doc.filename}</span>
+                  <span className="text-green-600">{doc.status || 'uploaded'}</span>
+                </div>
               ))}
             </div>
-
-            {/* Continue Button */}
-            <button
-              onClick={handleContinue}
-              disabled={!selectedModule}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-md font-medium transition-all whitespace-nowrap ${
-                selectedModule
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              <span>Continue</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          )}
+          <div className="mt-4">
+            <Messages messages={messages} loading={loading} analysisRef={analysisRef} />
+            <div className="h-48" /> {/* spacer so last messages not hidden behind floating bar */}
           </div>
         </div>
       </div>
     </div>
+    {/* Floating bottom chat bar */}
+    <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur border-t border-gray-200">
+      <div className="max-w-4xl mx-auto px-4 py-3 space-y-2">
+        <ModuleBar modules={modules} selectedModule={selectedModule} setSelectedModule={setSelectedModule} caseTitle={caseTitle} />
+        <ChatInput
+          selectedModule={selectedModule}
+          loading={loading}
+          input={input}
+          setInput={setInput}
+          sendMessage={sendMessage}
+          error={error}
+          hasAssistant={hasAssistant}
+          onAddFile={()=> { if(fileInputRef.current){ fileInputRef.current.click(); }}}
+        />
+      </div>
+    </div>
+    </>
   );
 }

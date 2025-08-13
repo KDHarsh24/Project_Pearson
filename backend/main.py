@@ -108,7 +108,7 @@ async def upload_document(
             "filename": file.filename,
             "case_title": case_title,
             "case_type": case_type,
-            "status": "ready_for_analysis",
+            "status": "ready",
             "vector_storage": "ingested"
         }
         

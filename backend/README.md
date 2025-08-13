@@ -1,4 +1,4 @@
-# Project Pearson – Mike Ross AI Engine (Hackathon Edition)
+# Project Pearson – Mike Ross AI Engine (IBM Techxchange)
 
 ## 1. Overview
 Agentic RAG system for paralegal intelligence ("Mike Ross"). Focus: high-signal ingestion, enrichment, retrieval, explainable answers (citations).
@@ -16,7 +16,7 @@ RAW_STORAGE=storage/raw
 CURATED_STORAGE=storage/curated
 ```
 
-## 3. Components
+## 3. Components and Endpoints
 - FastAPI service (`main.py`) – upload, chat (RAG), search, graph, timeline.
 - Crawler / seeder (`app.py`) – ingest public case law.
 - Vector store wrapper (`vectorstores/chroma_store.py`).
