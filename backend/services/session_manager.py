@@ -9,10 +9,25 @@ Users can return to their sessions without re-uploading documents.
 import os
 import json
 import hashlib
+import io
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from pathlib import Path
 from vectorstores.chroma_store import ChromaVectorStore
+
+# Optional parsers for various file formats
+try:
+    from pypdf import PdfReader
+except Exception:
+    PdfReader = None
+try:
+    from docx import Document
+except Exception:
+    Document = None
+try:
+    from bs4 import BeautifulSoup
+except Exception:
+    BeautifulSoup = None
 
 class SessionManager:
     """Manages sessions, documents, and chat history"""
@@ -75,7 +90,9 @@ class SessionManager:
     
     def add_document_to_session(self, session_id: str, file_content: bytes, 
                                filename: str, case_title: str, case_type: str) -> Dict[str, Any]:
-        """Add document to session with vector storage"""
+        """Add document to session with vector storage.
+        Supports: PDF, DOCX, TXT, MD, JSON, HTML, CSV, LOG, fallback decode.
+        """
         session = self.get_session(session_id)
         if not session:
             session = self.create_session(session_id)
@@ -108,30 +125,30 @@ class SessionManager:
         collection_name = f"session_{session_id}_docs"
         if collection_name not in session["vector_collections"]:
             session["vector_collections"].append(collection_name)
-        
+
+        # Extract textual content with multi-format support
+        extracted_text, extraction_meta = self._extract_text(filename, file_content)
+        doc_metadata["extraction"] = extraction_meta
+
         # Store in vector database
         try:
-            # Try to create vector store, fallback to basic storage if WatsonX not available
             try:
                 vector_store = ChromaVectorStore(collection_name=collection_name)
             except Exception as ve:
                 print(f"WatsonX vector store not available: {ve}")
                 # Fallback: store chunks in session metadata for basic functionality
-                content_text = file_content.decode('utf-8', errors='ignore')
-                chunks = self._chunk_text(content_text)
+                chunks = self._chunk_text(extracted_text)
                 doc_metadata["vector_status"] = "stored_local"
                 doc_metadata["chunks_count"] = len(chunks)
-                doc_metadata["chunks"] = chunks[:5]  # Store first 5 chunks for basic search
+                doc_metadata["chunks"] = chunks[:5]
                 raise Exception("Using local fallback storage")
-            
-            # Convert content to text and chunk it
-            content_text = file_content.decode('utf-8', errors='ignore')
-            chunks = self._chunk_text(content_text)
-            
-            # Add to vector store with metadata
+
+            # Chunk extracted text
+            chunks = self._chunk_text(extracted_text)
+
+            # Prepare batch for vector store
             chunk_texts = []
             chunk_metadatas = []
-            
             for i, chunk in enumerate(chunks):
                 chunk_texts.append(chunk)
                 chunk_metadatas.append({
@@ -143,28 +160,19 @@ class SessionManager:
                     "session_id": session_id,
                     "upload_date": doc_metadata["uploaded_at"]
                 })
-            
-            # Use add_texts method instead of add_document
-            vector_store.add_texts(
-                texts=chunk_texts,
-                metadatas=chunk_metadatas
-            )
-            
+
+            vector_store.add_texts(texts=chunk_texts, metadatas=chunk_metadatas)
             doc_metadata["vector_status"] = "stored"
             doc_metadata["chunks_count"] = len(chunks)
-            
         except Exception as e:
             print(f"Vector storage error for {doc_id}: {e}")
-            # If we already set local fallback status, keep it
             if doc_metadata.get("vector_status") != "stored_local":
                 doc_metadata["vector_status"] = "failed"
                 doc_metadata["vector_error"] = str(e)
-                # Try basic chunking as fallback
                 try:
-                    content_text = file_content.decode('utf-8', errors='ignore')
-                    chunks = self._chunk_text(content_text)
+                    chunks = self._chunk_text(extracted_text)
                     doc_metadata["chunks_count"] = len(chunks)
-                    doc_metadata["chunks"] = chunks[:5]  # Store first 5 chunks
+                    doc_metadata["chunks"] = chunks[:5]
                     doc_metadata["vector_status"] = "stored_local"
                 except Exception as chunk_error:
                     print(f"Even basic chunking failed: {chunk_error}")
@@ -313,6 +321,68 @@ class SessionManager:
             sessions_summary.append(summary)
         
         return sorted(sessions_summary, key=lambda x: x["last_accessed"], reverse=True)
+
+    # -----------------------------
+    # Internal: multi-format extraction
+    # -----------------------------
+    def _extract_text(self, filename: str, file_bytes: bytes) -> tuple[str, Dict[str, Any]]:
+        """Extract text from a variety of common legal document formats.
+        Returns (text, metadata)
+        """
+        name_lower = filename.lower()
+        ext = os.path.splitext(name_lower)[1]
+        meta: Dict[str, Any] = {
+            "extension": ext or None,
+            "method": None,
+            "success": False
+        }
+        text = ""
+        try:
+            if ext == '.pdf' and PdfReader is not None:
+                meta["method"] = "pdf_pypdf"
+                reader = PdfReader(io.BytesIO(file_bytes))
+                pages = []
+                for p in reader.pages:
+                    try:
+                        pages.append(p.extract_text() or "")
+                    except Exception:
+                        pages.append("")
+                text = "\n".join(pages)
+            elif ext == '.docx' and Document is not None:
+                meta["method"] = "docx_python-docx"
+                doc = Document(io.BytesIO(file_bytes))
+                text = "\n".join(p.text for p in doc.paragraphs)
+            elif ext in ['.txt', '.md', '.csv', '.log']:
+                meta["method"] = "plain_utf8"
+                text = file_bytes.decode('utf-8', errors='ignore')
+            elif ext == '.json':
+                meta["method"] = "json_pretty"
+                try:
+                    obj = json.loads(file_bytes.decode('utf-8', errors='ignore'))
+                    text = json.dumps(obj, indent=2)
+                except Exception:
+                    text = file_bytes.decode('utf-8', errors='ignore')
+            elif ext in ['.html', '.htm'] and BeautifulSoup is not None:
+                meta["method"] = "html_bs4"
+                soup = BeautifulSoup(file_bytes.decode('utf-8', errors='ignore'), 'html.parser')
+                for tag in soup(['script', 'style']):
+                    tag.decompose()
+                text = soup.get_text(separator='\n')
+            else:
+                meta["method"] = "fallback_utf8"
+                text = file_bytes.decode('utf-8', errors='ignore')
+            # Normalize whitespace
+            text = '\n'.join(line.strip() for line in text.splitlines() if line.strip())
+            meta["success"] = True
+        except Exception as e:
+            meta["method"] = meta.get("method") or "error_fallback"
+            meta["error"] = str(e)
+            try:
+                text = file_bytes.decode('utf-8', errors='ignore')
+            except Exception:
+                text = ""
+        meta["length"] = len(text)
+        return text, meta
     
     def delete_session(self, session_id: str) -> bool:
         """Delete a session and its associated data"""
