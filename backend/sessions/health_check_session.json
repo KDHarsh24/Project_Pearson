@@ -1,0 +1,26 @@
+{
+  "session_id": "health_check_session",
+  "created_at": "2025-08-14T14:28:28.672992",
+  "last_accessed": "2025-08-14T14:28:28.673004",
+  "user_info": {},
+  "documents": {
+    "doc_health_check_session_4368d78917e7": {
+      "doc_id": "doc_health_check_session_4368d78917e7",
+      "filename": "health_check.txt",
+      "case_title": "HealthCheck",
+      "case_type": "Test",
+      "file_path": "session_documents/doc_health_check_session_4368d78917e7_health_check.txt",
+      "file_size": 160,
+      "uploaded_at": "2025-08-14T14:28:28.673459",
+      "content_hash": "4368d78917e7",
+      "vector_status": "stored",
+      "chunks_count": 1
+    }
+  },
+  "chat_history": [],
+  "vector_collections": [
+    "session_health_check_session_docs"
+  ],
+  "total_analyses": 0,
+  "status": "active"
+}
