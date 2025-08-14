@@ -1,6 +1,28 @@
 import React, { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar, Pie } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // Lightweight code block with copy button & nicer styling
 function CodeBlock({ inline, className, children, ...props }) {
@@ -53,6 +75,127 @@ const mdComponents = {
   code: CodeBlock
 };
 
+// Chart component for rendering different chart types
+const ChartComponent = ({ chartData }) => {
+  const { type, data, options, title } = chartData;
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">{title}</h3>
+      <div className="h-64">
+        {type === 'pie' && <Pie data={data} options={options} />}
+        {type === 'bar' && <Bar data={data} options={options} />}
+        {type === 'doughnut' && <Pie data={data} options={options} />}
+      </div>
+    </div>
+  );
+};
+
+// Function to render assistant messages with chart support
+const renderAssistantMessage = (content) => {
+  // Try to parse as JSON (structured response with charts)
+  let parsedContent;
+  try {
+    parsedContent = JSON.parse(content);
+  } catch {
+    // If not JSON, treat as regular markdown
+    return (
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+        {content}
+      </ReactMarkdown>
+    );
+  }
+
+  // If it's a structured response with charts
+  if (parsedContent && parsedContent.has_charts && parsedContent.charts) {
+    return (
+      <div className="space-y-4">
+        {/* Response Header */}
+        <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-gray-900">
+              {parsedContent.case_title || 'Analysis Results'}
+            </h2>
+            {parsedContent.status && (
+              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                {parsedContent.status}
+              </span>
+            )}
+          </div>
+          {parsedContent.case_id && (
+            <p className="text-xs text-gray-600 mb-1">
+              <strong>Case ID:</strong> {parsedContent.case_id}
+            </p>
+          )}
+          {parsedContent.model_type && (
+            <p className="text-xs text-gray-600 mb-1">
+              <strong>Model:</strong> {parsedContent.model_type}
+            </p>
+          )}
+          {parsedContent.user_prompt && (
+            <p className="text-xs text-gray-600">
+              <strong>User Prompt:</strong> {parsedContent.user_prompt}
+            </p>
+          )}
+        </div>
+
+        {/* Analysis Content */}
+        {parsedContent.analysis && (
+          <div className="bg-white/50 rounded-lg border border-gray-100 p-4">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              {parsedContent.analysis}
+            </ReactMarkdown>
+          </div>
+        )}
+
+        {/* Charts Section */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-gray-900">Visual Analysis</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {parsedContent.charts.map((chart, index) => (
+              <ChartComponent key={index} chartData={chart} />
+            ))}
+          </div>
+        </div>
+
+        {/* Metadata */}
+        {parsedContent.metadata && (
+          <div className="bg-gray-50/50 rounded-lg border border-gray-100 p-3">
+            <h4 className="text-xs font-medium text-gray-900 mb-2">Analysis Metadata</h4>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="text-gray-500">Confidence:</span>
+                <span className="ml-1 capitalize font-medium">{parsedContent.metadata.confidence}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Analysis Type:</span>
+                <span className="ml-1 font-medium">{parsedContent.metadata.analysis_type}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Charts Generated:</span>
+                <span className="ml-1 font-medium">{parsedContent.metadata.chart_count}</span>
+              </div>
+              {parsedContent.timestamp && (
+                <div>
+                  <span className="text-gray-500">Timestamp:</span>
+                  <span className="ml-1 font-medium">{new Date(parsedContent.timestamp).toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular JSON response without charts
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+      {content}
+    </ReactMarkdown>
+  );
+};
+
 export function Messages({ messages, loading, analysisRef }) {
   const hasAssistant = messages.some(m => m.role === 'assistant');
   const endRef = useRef(null);
@@ -96,9 +239,7 @@ export function Messages({ messages, loading, analysisRef }) {
                 {isUser ? (
                   <span className="whitespace-pre-wrap block">{m.content}</span>
                 ) : (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                    {m.content}
-                  </ReactMarkdown>
+                  renderAssistantMessage(m.content)
                 )}
               </div>
             </div>
