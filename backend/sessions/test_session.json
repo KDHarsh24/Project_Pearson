@@ -1,0 +1,11 @@
+{
+  "session_id": "test_session",
+  "created_at": "2025-08-14T14:15:14.817066",
+  "last_accessed": "2025-08-14T14:15:14.817078",
+  "user_info": {},
+  "documents": {},
+  "chat_history": [],
+  "vector_collections": [],
+  "total_analyses": 0,
+  "status": "active"
+}

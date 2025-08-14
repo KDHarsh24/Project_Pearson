@@ -1,0 +1,26 @@
+{
+  "session_id": "test_session_123",
+  "created_at": "2025-08-14T14:15:44.380974",
+  "last_accessed": "2025-08-14T14:16:07.076040",
+  "user_info": {},
+  "documents": {
+    "doc_test_session_123_2e63a99a0643": {
+      "doc_id": "doc_test_session_123_2e63a99a0643",
+      "filename": "test_doc.txt",
+      "case_title": "Test Case",
+      "case_type": "Test Type",
+      "file_path": "session_documents/doc_test_session_123_2e63a99a0643_test_doc.txt",
+      "file_size": 93,
+      "uploaded_at": "2025-08-14T14:16:07.076545",
+      "content_hash": "2e63a99a0643",
+      "vector_status": "stored",
+      "chunks_count": 1
+    }
+  },
+  "chat_history": [],
+  "vector_collections": [
+    "session_test_session_123_docs"
+  ],
+  "total_analyses": 0,
+  "status": "active"
+}
