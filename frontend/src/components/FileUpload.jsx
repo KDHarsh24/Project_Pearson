@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useCaseChat } from './chat/useCaseChat';
 import { UploadArea } from './chat/UploadArea';
+import Header from './Header';
 import { ModuleBar } from './chat/ModuleBar';
 import { ChatInput } from './chat/ChatInput';
 import { Messages } from './chat/Messages';
@@ -89,14 +90,21 @@ export default function DocumentUploadPage() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Main Content */}
       <div className="flex-1">
-        <div className="border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3">
-            <img src={require('../image/mikeross.webp')} alt="Logo" className="h-9 w-9" />
-            <h1 className="text-2xl font-semibold text-gray-900">Mike Ross</h1>
-          </div>
-        </div>
+      <Header />
 
         <div className="max-w-4xl mx-auto px-6 py-8">
+          {/* Mike Ross intro bubble */}
+          <div className="mb-6">
+            <div className="flex items-start gap-3">
+              <div className="relative h-9 w-9 flex items-center justify-center">
+                <img src={require('../image/mikeross.webp')} alt="Mike Ross" className="h-8 w-8 rounded-full border-2 border-blue-200 shadow" />
+              </div>
+              <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-900 shadow-sm max-w-xl">
+                <span className="font-semibold text-blue-700">Hi, I'm Mike Ross.</span><br/>
+                I can analyze your legal documents, summarize contracts, strategize depositions, and research precedents. Upload your files and select a module below to get started!
+              </div>
+            </div>
+          </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Case Type</label>
             <select
@@ -104,13 +112,16 @@ export default function DocumentUploadPage() {
               onChange={e=>setCaseType(e.target.value)}
               className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-400"
             >
-              <option>General Legal</option>
-              <option>Civil</option>
-              <option>Criminal</option>
-              <option>Corporate</option>
-              <option>Family</option>
-              <option>Tax</option>
+                <option className="hover:bg-blue-50">General Legal</option>
+                <option className="hover:bg-blue-50">Civil</option>
+                <option className="hover:bg-blue-50">Criminal</option>
+                <option className="hover:bg-blue-50">Corporate</option>
+                <option className="hover:bg-blue-50">Family</option>
+                <option className="hover:bg-blue-50">Tax</option>
             </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6"/></svg>
+              </span>
           </div>
           {!hasAssistant && (
             <UploadArea
@@ -153,7 +164,7 @@ export default function DocumentUploadPage() {
     </div>
     {/* Floating bottom chat bar */}
     <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur border-t border-gray-200">
-      <div className="max-w-4xl mx-auto px-4 py-3 space-y-2">
+      <div className="max-w-4xl mx-auto px-4 py-2 space-y-1">
         <ModuleBar modules={modules} selectedModule={selectedModule} setSelectedModule={setSelectedModule} caseTitle={caseTitle} />
         <ChatInput
           selectedModule={selectedModule}
