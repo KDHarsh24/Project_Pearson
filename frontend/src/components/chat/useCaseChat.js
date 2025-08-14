@@ -23,10 +23,10 @@ export function useCaseChat() {
   }, [messages]);
 
   const modules = [
-    { id: 'analysis', title: 'Case Breaker', icon: '📊' },
-    { id: 'summarize', title: 'Contract X-Ray', icon: '📝' },
+    { id: 'analysis', title: 'Case Analyzer', icon: '📊' },
+    { id: 'summarize', title: 'Contract Scanner', icon: '📝' },
     { id: 'translate', title: 'Deposition Strategist', icon: '🌍' },
-    { id: 'extract', title: 'Precedent Strategist', icon: '🔍' }
+    { id: 'extract', title: 'Precedent Locator', icon: '🔍' }
   ];
 
   const moduleEndpoints = {

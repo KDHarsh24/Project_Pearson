@@ -10,7 +10,7 @@ export function ChatInput({ selectedModule, loading, input, setInput, sendMessag
             type="button"
             onClick={()=> onAddFile()}
             disabled={loading}
-            className={`h-10 w-10 flex items-center justify-center rounded-full border bg-white transition-colors ${loading? 'opacity-50 cursor-not-allowed':'hover:bg-gray-100'}`}
+            className={`h-9 w-9 flex items-center justify-center rounded-full border bg-white transition-colors ${loading? 'opacity-50 cursor-not-allowed':'hover:bg-gray-100'}`}
             title="Add another file"
             style={{ alignSelf: 'center' }}
           >
@@ -24,14 +24,14 @@ export function ChatInput({ selectedModule, loading, input, setInput, sendMessag
             disabled={!selectedModule || loading}
             onChange={(e)=> setInput(e.target.value)}
             onKeyDown={(e)=> { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } }}
-            placeholder={selectedModule ? 'Ask something about your case...' : 'Select a module to start'}
-            className="w-full resize-none rounded-2xl border border-gray-300 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 py-3 pl-4 pr-14 text-sm leading-snug disabled:opacity-60"
-            style={{ minHeight: '44px', alignSelf: 'center' }}
+            placeholder={selectedModule ? 'Type your message here…' : 'Select a module to start'}
+            className="w-full resize-none rounded-2xl border border-gray-300 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 py-3 pl-4 pr-16 text-xs sm:text-sm md:text-base lg:text-lg leading-snug disabled:opacity-60 font-sans placeholder:italic placeholder:text-gray-400"
+            style={{ alignSelf: 'center' }}
           />
           <button
             onClick={sendMessage}
             disabled={disabledSend}
-            className={`absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center rounded-full transition-colors ${disabledSend ? 'bg-gray-200 text-gray-400':'bg-blue-600 hover:bg-blue-700 text-white'}`}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full transition-colors ${disabledSend ? 'bg-gray-200 text-gray-400':'bg-blue-600 hover:bg-blue-700 text-white'}`}
             style={{ alignSelf: 'center' }}
           >
             <Send className="w-4 h-4" />

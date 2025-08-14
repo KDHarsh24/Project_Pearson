@@ -87,30 +87,30 @@ export default function DocumentUploadPage() {
 
   return (
     <>
-    <div className="min-h-screen bg-white flex flex-col">
+  <div className="min-h-screen bg-white flex flex-col w-full">
       {/* Main Content */}
       <div className="flex-1">
       <Header />
 
-        <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto px-2 sm:px-6 py-4 sm:py-8 w-full">
           {/* Mike Ross intro bubble */}
-          <div className="mb-6">
-            <div className="flex items-start gap-3">
-              <div className="relative h-9 w-9 flex items-center justify-center">
-                <img src={require('../image/mikeross.webp')} alt="Mike Ross" className="h-8 w-8 rounded-full border-2 border-blue-200 shadow" />
+          <div className="mb-4 sm:mb-6">
+            <div className="flex flex-row items-start gap-2 sm:gap-3 w-full">
+              <div className="relative aspect-square w-20 sm:w-9 flex items-center justify-center">
+                <img src={require('../image/mikeross.webp')} alt="Mike Ross" className="w-full h-full object-cover rounded-full border-2 border-blue-200 shadow" />
               </div>
-              <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-900 shadow-sm max-w-xl">
-                <span className="font-semibold text-blue-700">Hi, I'm Mike Ross.</span><br/>
-                I can analyze your legal documents, summarize contracts, strategize depositions, and research precedents. Upload your files and select a module below to get started!
+              <div className="bg-blue-50 border border-blue-100 rounded-xl px-2 py-1.5 sm:px-4 sm:py-3 text-[11px] sm:text-sm text-blue-900 shadow-sm max-w-full sm:max-w-xl">
+                <span className="font-semibold text-blue-700 text-[12px] sm:text-base">Hi, I'm Mike Ross.</span><br/>
+                <span className="block mt-1 leading-snug sm:leading-normal">I can analyze your legal documents, summarize contracts, strategize depositions, and research precedents. Upload your files and select a module below to get started!</span>
               </div>
             </div>
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Case Type</label>
+          <div className="mb-3 sm:mb-4 w-full">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Case Type</label>
             <select
               value={caseType}
               onChange={e=>setCaseType(e.target.value)}
-              className="border rounded px-2 py-2 text-sm focus:outline-none focus:ring focus:border-blue-400"
+              className="border rounded px-2 py-2 text-xs sm:text-sm focus:outline-none focus:ring focus:border-blue-400 w-full sm:w-auto"
             >
                 <option className="hover:bg-blue-50">General Legal</option>
                 <option className="hover:bg-blue-50">Civil</option>
@@ -119,9 +119,6 @@ export default function DocumentUploadPage() {
                 <option className="hover:bg-blue-50">Family</option>
                 <option className="hover:bg-blue-50">Tax</option>
             </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6"/></svg>
-              </span>
           </div>
           {!hasAssistant && (
             <UploadArea
@@ -146,11 +143,11 @@ export default function DocumentUploadPage() {
             />
           )}
           {uploadedDocsMeta.length > 0 && (
-            <div className="mt-4 text-xs text-gray-600 space-y-1">
+            <div className="mt-3 sm:mt-4 text-xs text-gray-600 space-y-1 w-full">
               {uploadedDocsMeta.map(doc => (
-                <div key={doc.document_id || doc.filename} className="flex items-center justify-between border rounded px-2 py-1">
-                  <span className="truncate mr-2" title={doc.filename}>{doc.filename}</span>
-                  <span className="text-green-600">{doc.status || 'uploaded'}</span>
+                <div key={doc.document_id || doc.filename} className="flex flex-row items-center justify-between border rounded px-2 py-1 w-full">
+                  <span className="truncate mr-2 w-full text-left" title={doc.filename}>{doc.filename}</span>
+                  <span className="text-green-600 ml-2 text-right">{doc.status || 'uploaded'}</span>
                 </div>
               ))}
             </div>
@@ -164,7 +161,7 @@ export default function DocumentUploadPage() {
     </div>
     {/* Floating bottom chat bar */}
     <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur border-t border-gray-200">
-      <div className="max-w-4xl mx-auto px-4 py-2 space-y-1">
+      <div className="max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto px-2 sm:px-4 py-2 space-y-1 w-full">
         <ModuleBar modules={modules} selectedModule={selectedModule} setSelectedModule={setSelectedModule} caseTitle={caseTitle} />
         <ChatInput
           selectedModule={selectedModule}
