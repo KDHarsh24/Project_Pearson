@@ -9,6 +9,7 @@ const generateCaseGuid = () => {
 export function useCaseChat() {
   const [selectedModule, setSelectedModule] = useState(null);
   const [caseTitle, setCaseTitle] = useState("");
+  const [sessionId, setSessionId] = useState("");
   const [messages, setMessages] = useState([]); // {role, content}
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,13 +37,20 @@ export function useCaseChat() {
   };
 
   const ensureCase = () => {
-    let active = caseTitle || localStorage.getItem('case_title');
+    let active = caseTitle || localStorage.getItem('session_id') || localStorage.getItem('case_title');
+    let session_id = localStorage.getItem('session_id');
     if (!active) {
       active = generateCaseGuid();
       setCaseTitle(active);
+      setSessionId(active);
       localStorage.setItem('case_title', active);
+      localStorage.setItem('session_id', active);
     } else if (!caseTitle) {
       setCaseTitle(active);
+    }
+    if (!session_id) {
+      session_id = active;
+      localStorage.setItem('session_id', session_id);
     }
     return active;
   };
@@ -60,21 +68,48 @@ export function useCaseChat() {
       const fd = new FormData();
       fd.append('user_prompt', userContent);
       fd.append('case_title', activeCase);
+      fd.append('session_id', activeCase);
       // Optional fields per endpoint (backend has defaults). Customize if needed.
       if (selectedModule === 'summarize') fd.append('contract_type', 'general');
       if (selectedModule === 'translate') fd.append('case_context', 'General legal case');
       if (selectedModule === 'extract') fd.append('legal_issue', 'General legal analysis');
-      fd.append('session_id', 'default_session');
-
+      console.log(fd);
       const res = await fetch(moduleEndpoints[selectedModule], {
         method: 'POST',
         body: fd
       });
       if (!res.ok) throw new Error('Request failed');
       const data = await res.json();
-      // Prefer envelope style (if later implemented) else fallback to legacy fields
-      const analysis = (data.data && (data.data.analysis_markdown || data.data.analysis)) || data.analysis || data.result || data.message || 'No content returned.';
-      setMessages(prev => [...prev, { role: 'assistant', content: analysis }]);
+      const structured = data?.structured_data || {};
+      const analysisMarkdown = (data.data && (data.data.analysis_markdown || data.data.analysis))
+        || data.analysis || '';
+      const chartsFlag = !!(
+        data?.has_charts || structured.has_charts ||
+        (Array.isArray(structured.charts) && structured.charts.length) ||
+        (Array.isArray(structured.visualizations) && structured.visualizations.length) ||
+        (Array.isArray(data?.charts) && data.charts.length) ||
+        (Array.isArray(data?.visualizations) && data.visualizations.length)
+      );
+      const hasStructured = chartsFlag || analysisMarkdown || data?.metadata || structured.metadata;
+
+      // Build conversational quick reply
+  let quickReply = data.reply || structured.reply || data.message || data.result || analysisMarkdown;
+      if (!quickReply) quickReply = 'Analysis generated.';
+      if (quickReply.length > 600) quickReply = quickReply.slice(0, 600) + '…';
+
+      setMessages(prev => {
+        const next = [...prev];
+        if (hasStructured) {
+          try {
+            next.push({ role: 'assistant', content: JSON.stringify(data) });
+          } catch {
+            if (analysisMarkdown && analysisMarkdown !== quickReply) {
+              next.push({ role: 'assistant', content: analysisMarkdown });
+            }
+          }
+        }
+        return next;
+      });
     } catch (e) {
       setError('Request failed');
       setMessages(prev => [...prev, { role: 'assistant', content: '**Error:** Unable to process your request.' }]);

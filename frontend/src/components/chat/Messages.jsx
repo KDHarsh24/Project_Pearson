@@ -199,70 +199,31 @@ const renderAssistantMessage = (content) => {
     );
   }
 
+  // Unwrap structured_data if present
+  const wrapper = parsedContent?.structured_data || parsedContent;
   // Check if response has charts (multiple possible keys for flexibility)
-  const hasCharts = parsedContent?.has_charts || 
-                   parsedContent?.charts?.length > 0 || 
-                   parsedContent?.visualizations?.length > 0;
-
-  const charts = parsedContent?.charts || parsedContent?.visualizations || [];
+  const hasCharts = wrapper?.has_charts || (Array.isArray(wrapper?.charts) && wrapper.charts.length > 0) || (Array.isArray(wrapper?.visualizations) && wrapper.visualizations.length > 0);
+  const charts = wrapper?.charts || wrapper?.visualizations || [];
 
   if (hasCharts && charts.length > 0) {
     return (
       <div className="space-y-4">
-        {/* Response Header */}
-        <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-gray-900">
-              {parsedContent.case_title || parsedContent.title || 'Analysis Results'}
-            </h2>
-            {parsedContent.status && (
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                parsedContent.status === 'completed' 
-                  ? 'bg-green-100 text-green-800'
-                  : parsedContent.status === 'processing'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {parsedContent.status}
-              </span>
-            )}
-          </div>
-          
-          {/* Metadata grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
-            {parsedContent.case_id && (
-              <div>
-                <strong>Case ID:</strong> {parsedContent.case_id}
-              </div>
-            )}
-            {parsedContent.model_type && (
-              <div>
-                <strong>Model:</strong> {parsedContent.model_type}
-              </div>
-            )}
-            {parsedContent.user_prompt && (
-              <div className="md:col-span-2">
-                <strong>User Prompt:</strong> {parsedContent.user_prompt}
-              </div>
-            )}
-          </div>
-        </div>
-
+        
         {/* Analysis Content */}
-        {parsedContent.analysis && (
+    {wrapper.analysis && (
           <div className="bg-white/50 rounded-lg border border-gray-100 p-4">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-              {parsedContent.analysis}
+      {wrapper.analysis}
             </ReactMarkdown>
           </div>
         )}
 
         {/* Summary if provided */}
-        {parsedContent.summary && (
+    {wrapper.summary && (
           <div className="bg-amber-50/50 rounded-lg border border-amber-100 p-4">
             <h4 className="text-sm font-semibold text-amber-900 mb-2">Executive Summary</h4>
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-              {parsedContent.summary}
+      {wrapper.summary}
             </ReactMarkdown>
           </div>
         )}
@@ -291,41 +252,41 @@ const renderAssistantMessage = (content) => {
         </div>
 
         {/* Metadata Footer */}
-        {parsedContent.metadata && (
+        {wrapper.metadata && (
           <div className="bg-gray-50/50 rounded-lg border border-gray-100 p-3">
             <h4 className="text-xs font-medium text-gray-900 mb-2">Analysis Metadata</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-              {parsedContent.metadata.confidence && (
+              {wrapper.metadata.confidence && (
                 <div>
                   <span className="text-gray-500">Confidence:</span>
                   <span className={`ml-1 capitalize font-medium ${
-                    parsedContent.metadata.confidence === 'high' 
+                    wrapper.metadata.confidence === 'high' 
                       ? 'text-green-600' 
-                      : parsedContent.metadata.confidence === 'medium'
+                      : wrapper.metadata.confidence === 'medium'
                       ? 'text-yellow-600'
                       : 'text-red-600'
                   }`}>
-                    {parsedContent.metadata.confidence}
+                    {wrapper.metadata.confidence}
                   </span>
                 </div>
               )}
-              {parsedContent.metadata.analysis_type && (
+              {wrapper.metadata.analysis_type && (
                 <div>
                   <span className="text-gray-500">Type:</span>
-                  <span className="ml-1 font-medium">{parsedContent.metadata.analysis_type}</span>
+                  <span className="ml-1 font-medium">{wrapper.metadata.analysis_type}</span>
                 </div>
               )}
-              {(parsedContent.metadata.chart_count || charts.length) && (
+              {(wrapper.metadata.chart_count || charts.length) && (
                 <div>
                   <span className="text-gray-500">Charts:</span>
-                  <span className="ml-1 font-medium">{parsedContent.metadata.chart_count || charts.length}</span>
+                  <span className="ml-1 font-medium">{wrapper.metadata.chart_count || charts.length}</span>
                 </div>
               )}
-              {parsedContent.timestamp && (
+              {wrapper.timestamp && (
                 <div>
                   <span className="text-gray-500">Generated:</span>
                   <span className="ml-1 font-medium">
-                    {new Date(parsedContent.timestamp).toLocaleTimeString()}
+                    {new Date(wrapper.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
               )}
@@ -334,20 +295,20 @@ const renderAssistantMessage = (content) => {
         )}
 
         {/* Additional content sections */}
-        {parsedContent.recommendations && (
+    {wrapper.recommendations && (
           <div className="bg-green-50/50 rounded-lg border border-green-100 p-4">
             <h4 className="text-sm font-semibold text-green-900 mb-2">Recommendations</h4>
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-              {parsedContent.recommendations}
+      {wrapper.recommendations}
             </ReactMarkdown>
           </div>
         )}
 
-        {parsedContent.warnings && (
+    {wrapper.warnings && (
           <div className="bg-red-50/50 rounded-lg border border-red-100 p-4">
             <h4 className="text-sm font-semibold text-red-900 mb-2">Warnings</h4>
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-              {parsedContent.warnings}
+      {wrapper.warnings}
             </ReactMarkdown>
           </div>
         )}
@@ -394,21 +355,26 @@ export function Messages({ messages, loading, analysisRef }) {
   const hasAssistant = messages.some(m => m.role === 'assistant');
   const endRef = useRef(null);
   
-  useEffect(() => {
-    if (analysisRef?.current && analysisRef.current.scrollHeight > 0) {
-      try { 
-        analysisRef.current.scrollTo({ 
-          top: analysisRef.current.scrollHeight, 
-          behavior: 'smooth' 
-        }); 
-      } catch { 
-        /* no-op */ 
-      }
-    }
+  const scrollToBottom = (smooth = true) => {
+    const behavior = smooth ? 'smooth' : 'auto';
     if (endRef.current) {
-      endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      try { endRef.current.scrollIntoView({ behavior, block: 'end' }); } catch {}
     }
-  }, [messages, loading, analysisRef]);
+    if (analysisRef?.current) {
+      try { analysisRef.current.scrollTop = analysisRef.current.scrollHeight; } catch {}
+    }
+  };
+
+  // Scroll on every messages or loading change (primary)
+  useEffect(() => {
+    scrollToBottom(true);
+    // Retry a couple times in case of images/charts sizing late
+    const timeouts = [50, 150, 350].map(t => setTimeout(() => scrollToBottom(false), t));
+    return () => timeouts.forEach(clearTimeout);
+  }, [messages, loading]);
+
+  // Initial mount safety
+  useEffect(() => { scrollToBottom(false); }, []);
 
   if (!hasAssistant) return null;
 
@@ -452,9 +418,19 @@ export function Messages({ messages, loading, analysisRef }) {
           );
         })}
         {loading && (
-          <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
-            <div className="animate-spin h-3 w-3 border border-blue-300 border-t-blue-600 rounded-full"></div>
-            <span className="animate-pulse">Mike Ross is analyzing...</span>
+          <div className="mt-6 flex flex-col items-start">
+            <div className="flex items-center gap-2 mb-1">
+              <img
+                src={require('../../image/mikeross.webp')}
+                alt="Mike Ross"
+                className="h-5 w-5 rounded-full border border-blue-200 shadow"
+              />
+              <span className="text-[10px] text-blue-700 font-semibold">Mike Ross</span>
+            </div>
+            <div className="rounded-xl px-4 py-3 md:py-3.5 text-[13px] leading-[1.6] shadow-sm transition-colors max-w-[780px] w-fit bg-white/95 backdrop-blur border border-gray-200 flex items-center gap-2">
+              <div className="animate-spin h-4 w-4 border-2 border-blue-300 border-t-blue-600 rounded-full mr-2"></div>
+              <span className="animate-pulse text-blue-700 font-medium">Analyzing…</span>
+            </div>
           </div>
         )}
         <div ref={endRef} />

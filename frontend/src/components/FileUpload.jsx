@@ -110,7 +110,7 @@ export default function DocumentUploadPage() {
             <select
               value={caseType}
               onChange={e=>setCaseType(e.target.value)}
-              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-400"
+              className="border rounded px-2 py-2 text-sm focus:outline-none focus:ring focus:border-blue-400"
             >
                 <option className="hover:bg-blue-50">General Legal</option>
                 <option className="hover:bg-blue-50">Civil</option>
