@@ -210,12 +210,11 @@ const renderAssistantMessage = (content) => {
       <div className="space-y-4">
         
         {/* Analysis Content */}
-    {wrapper.analysis && (
-          <div className="bg-white/50 rounded-lg border border-gray-100 p-4">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-      {wrapper.analysis}
-            </ReactMarkdown>
-          </div>
+        {wrapper.analysis && (
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+          {wrapper.analysis}
+          </ReactMarkdown>
+
         )}
 
         {/* Summary if provided */}
@@ -316,39 +315,9 @@ const renderAssistantMessage = (content) => {
     );
   }
 
-  // Regular JSON response without charts or plain text
-  if (typeof parsedContent === 'object') {
-    // Handle structured JSON without charts
-    return (
-      <div className="space-y-3">
-        {Object.entries(parsedContent).map(([key, value]) => (
-          <div key={key} className="bg-gray-50/50 rounded-lg border border-gray-100 p-3">
-            <h4 className="text-xs font-medium text-gray-900 mb-1 capitalize">
-              {key.replace(/_/g, ' ')}
-            </h4>
-            <div className="text-sm">
-              {typeof value === 'string' ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                  {value}
-                </ReactMarkdown>
-              ) : (
-                <pre className="text-xs bg-white p-2 rounded border overflow-auto">
-                  {JSON.stringify(value, null, 2)}
-                </pre>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Fallback to regular markdown
-  return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-      {content}
-    </ReactMarkdown>
-  );
+  // If no charts: fall back to a simple markdown rendering using main analysis/message fields
+  const fallbackText = wrapper.analysis_markdown || wrapper.analysis || wrapper.message || wrapper.result || content;
+  return <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{fallbackText}</ReactMarkdown>;
 };
 
 export function Messages({ messages, loading, analysisRef }) {
@@ -379,7 +348,7 @@ export function Messages({ messages, loading, analysisRef }) {
   if (!hasAssistant) return null;
 
   return (
-    <div ref={analysisRef} className="mt-4 px-3 md:px-4 pb-2">
+    <div ref={analysisRef} className="mt-4 px-1 md:px-1 pb-2">
       <div className="flex flex-col max-w-4xl mx-auto">
         {messages.map((m, idx) => {
           const isUser = m.role === 'user';
@@ -401,7 +370,7 @@ export function Messages({ messages, loading, analysisRef }) {
                 </span>
               </div>
               <div
-                className={`group rounded-xl px-4 py-3 md:py-3.5 text-[13px] leading-[1.6] shadow-sm transition-colors max-w-[780px] w-fit ${
+                className={`group rounded-xl px-8 py-6 md:py-3.5 text-[13px] leading-[1.6] shadow-sm transition-colors max-w-full w-fit ${
                   isUser
                     ? 'bg-gradient-to-tr from-blue-600 to-blue-500 text-white border border-blue-400/50'
                     : 'bg-white/95 backdrop-blur border border-gray-200'
@@ -429,7 +398,7 @@ export function Messages({ messages, loading, analysisRef }) {
             </div>
             <div className="rounded-xl px-4 py-3 md:py-3.5 text-[13px] leading-[1.6] shadow-sm transition-colors max-w-[780px] w-fit bg-white/95 backdrop-blur border border-gray-200 flex items-center gap-2">
               <div className="animate-spin h-4 w-4 border-2 border-blue-300 border-t-blue-600 rounded-full mr-2"></div>
-              <span className="animate-pulse text-blue-700 font-medium">Analyzing…</span>
+              <span className="animate-pulse text-blue-700 font-medium">Thinking…</span>
             </div>
           </div>
         )}
