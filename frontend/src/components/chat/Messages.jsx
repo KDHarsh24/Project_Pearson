@@ -6,19 +6,25 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   ArcElement,
   Title,
   Tooltip,
   Legend,
+  RadialLinearScale,
 } from 'chart.js';
-import { Bar, Pie } from 'react-chartjs-2';
+import { Bar, Pie, Line, Doughnut, PolarArea, Radar } from 'react-chartjs-2';
 
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   ArcElement,
+  RadialLinearScale,
   Title,
   Tooltip,
   Legend
@@ -75,23 +81,110 @@ const mdComponents = {
   code: CodeBlock
 };
 
-// Chart component for rendering different chart types
-const ChartComponent = ({ chartData }) => {
-  const { type, data, options, title } = chartData;
+// Enhanced Chart component for rendering different chart types
+const ChartComponent = ({ chartData, index }) => {
+  const { type, data, options, title, description } = chartData;
+
+  // Default options for better styling
+  const defaultOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          usePointStyle: true,
+        }
+      },
+      title: {
+        display: !!title,
+        text: title,
+        font: {
+          size: 14,
+          weight: 'bold'
+        },
+        padding: {
+          bottom: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+      }
+    }
+  };
+
+  // Merge default options with provided options
+  const mergedOptions = {
+    ...defaultOptions,
+    ...options,
+    plugins: {
+      ...defaultOptions.plugins,
+      ...options?.plugins
+    }
+  };
+
+  // Chart type mapping
+  const renderChart = () => {
+    switch (type?.toLowerCase()) {
+      case 'pie':
+        return <Pie data={data} options={mergedOptions} />;
+      case 'bar':
+        return <Bar data={data} options={mergedOptions} />;
+      case 'line':
+        return <Line data={data} options={mergedOptions} />;
+      case 'doughnut':
+        return <Doughnut data={data} options={mergedOptions} />;
+      case 'polararea':
+        return <PolarArea data={data} options={mergedOptions} />;
+      case 'radar':
+        return <Radar data={data} options={mergedOptions} />;
+      default:
+        console.warn(`Unsupported chart type: ${type}`);
+        return (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="text-center">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">Unsupported chart type: {type}</div>
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">{title}</h3>
-      <div className="h-64">
-        {type === 'pie' && <Pie data={data} options={options} />}
-        {type === 'bar' && <Bar data={data} options={options} />}
-        {type === 'doughnut' && <Pie data={data} options={options} />}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 transition-all hover:shadow-md">
+      {title && (
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+          {description && (
+            <p className="text-xs text-gray-600 mt-1">{description}</p>
+          )}
+        </div>
+      )}
+      <div className="h-64 w-full">
+        {renderChart()}
+      </div>
+      {/* Chart metadata */}
+      <div className="mt-3 pt-3 border-t border-gray-100">
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <span>Chart {index + 1}</span>
+          <span className="capitalize bg-gray-100 px-2 py-1 rounded-full">
+            {type} Chart
+          </span>
+        </div>
       </div>
     </div>
   );
 };
 
-// Function to render assistant messages with chart support
+// Function to render assistant messages with enhanced chart support
 const renderAssistantMessage = (content) => {
   // Try to parse as JSON (structured response with charts)
   let parsedContent;
@@ -106,37 +199,53 @@ const renderAssistantMessage = (content) => {
     );
   }
 
-  // If it's a structured response with charts
-  if (parsedContent && parsedContent.has_charts && parsedContent.charts) {
+  // Check if response has charts (multiple possible keys for flexibility)
+  const hasCharts = parsedContent?.has_charts || 
+                   parsedContent?.charts?.length > 0 || 
+                   parsedContent?.visualizations?.length > 0;
+
+  const charts = parsedContent?.charts || parsedContent?.visualizations || [];
+
+  if (hasCharts && charts.length > 0) {
     return (
       <div className="space-y-4">
         {/* Response Header */}
         <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-gray-900">
-              {parsedContent.case_title || 'Analysis Results'}
+              {parsedContent.case_title || parsedContent.title || 'Analysis Results'}
             </h2>
             {parsedContent.status && (
-              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                parsedContent.status === 'completed' 
+                  ? 'bg-green-100 text-green-800'
+                  : parsedContent.status === 'processing'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : 'bg-gray-100 text-gray-800'
+              }`}>
                 {parsedContent.status}
               </span>
             )}
           </div>
-          {parsedContent.case_id && (
-            <p className="text-xs text-gray-600 mb-1">
-              <strong>Case ID:</strong> {parsedContent.case_id}
-            </p>
-          )}
-          {parsedContent.model_type && (
-            <p className="text-xs text-gray-600 mb-1">
-              <strong>Model:</strong> {parsedContent.model_type}
-            </p>
-          )}
-          {parsedContent.user_prompt && (
-            <p className="text-xs text-gray-600">
-              <strong>User Prompt:</strong> {parsedContent.user_prompt}
-            </p>
-          )}
+          
+          {/* Metadata grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
+            {parsedContent.case_id && (
+              <div>
+                <strong>Case ID:</strong> {parsedContent.case_id}
+              </div>
+            )}
+            {parsedContent.model_type && (
+              <div>
+                <strong>Model:</strong> {parsedContent.model_type}
+              </div>
+            )}
+            {parsedContent.user_prompt && (
+              <div className="md:col-span-2">
+                <strong>User Prompt:</strong> {parsedContent.user_prompt}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Analysis Content */}
@@ -148,47 +257,132 @@ const renderAssistantMessage = (content) => {
           </div>
         )}
 
+        {/* Summary if provided */}
+        {parsedContent.summary && (
+          <div className="bg-amber-50/50 rounded-lg border border-amber-100 p-4">
+            <h4 className="text-sm font-semibold text-amber-900 mb-2">Executive Summary</h4>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              {parsedContent.summary}
+            </ReactMarkdown>
+          </div>
+        )}
+
         {/* Charts Section */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-900">Visual Analysis</h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {parsedContent.charts.map((chart, index) => (
-              <ChartComponent key={index} chartData={chart} />
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-900">Visual Analysis</h3>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              {charts.length} chart{charts.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          
+          {/* Responsive grid for charts */}
+          <div className={`grid gap-3 ${
+            charts.length === 1 
+              ? 'grid-cols-1' 
+              : charts.length === 2 
+              ? 'grid-cols-1 lg:grid-cols-2' 
+              : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+          }`}>
+            {charts.map((chart, index) => (
+              <ChartComponent key={index} chartData={chart} index={index} />
             ))}
           </div>
         </div>
 
-        {/* Metadata */}
+        {/* Metadata Footer */}
         {parsedContent.metadata && (
           <div className="bg-gray-50/50 rounded-lg border border-gray-100 p-3">
             <h4 className="text-xs font-medium text-gray-900 mb-2">Analysis Metadata</h4>
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <span className="text-gray-500">Confidence:</span>
-                <span className="ml-1 capitalize font-medium">{parsedContent.metadata.confidence}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Analysis Type:</span>
-                <span className="ml-1 font-medium">{parsedContent.metadata.analysis_type}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Charts Generated:</span>
-                <span className="ml-1 font-medium">{parsedContent.metadata.chart_count}</span>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              {parsedContent.metadata.confidence && (
+                <div>
+                  <span className="text-gray-500">Confidence:</span>
+                  <span className={`ml-1 capitalize font-medium ${
+                    parsedContent.metadata.confidence === 'high' 
+                      ? 'text-green-600' 
+                      : parsedContent.metadata.confidence === 'medium'
+                      ? 'text-yellow-600'
+                      : 'text-red-600'
+                  }`}>
+                    {parsedContent.metadata.confidence}
+                  </span>
+                </div>
+              )}
+              {parsedContent.metadata.analysis_type && (
+                <div>
+                  <span className="text-gray-500">Type:</span>
+                  <span className="ml-1 font-medium">{parsedContent.metadata.analysis_type}</span>
+                </div>
+              )}
+              {(parsedContent.metadata.chart_count || charts.length) && (
+                <div>
+                  <span className="text-gray-500">Charts:</span>
+                  <span className="ml-1 font-medium">{parsedContent.metadata.chart_count || charts.length}</span>
+                </div>
+              )}
               {parsedContent.timestamp && (
                 <div>
-                  <span className="text-gray-500">Timestamp:</span>
-                  <span className="ml-1 font-medium">{new Date(parsedContent.timestamp).toLocaleString()}</span>
+                  <span className="text-gray-500">Generated:</span>
+                  <span className="ml-1 font-medium">
+                    {new Date(parsedContent.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Additional content sections */}
+        {parsedContent.recommendations && (
+          <div className="bg-green-50/50 rounded-lg border border-green-100 p-4">
+            <h4 className="text-sm font-semibold text-green-900 mb-2">Recommendations</h4>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              {parsedContent.recommendations}
+            </ReactMarkdown>
+          </div>
+        )}
+
+        {parsedContent.warnings && (
+          <div className="bg-red-50/50 rounded-lg border border-red-100 p-4">
+            <h4 className="text-sm font-semibold text-red-900 mb-2">Warnings</h4>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              {parsedContent.warnings}
+            </ReactMarkdown>
           </div>
         )}
       </div>
     );
   }
 
-  // Regular JSON response without charts
+  // Regular JSON response without charts or plain text
+  if (typeof parsedContent === 'object') {
+    // Handle structured JSON without charts
+    return (
+      <div className="space-y-3">
+        {Object.entries(parsedContent).map(([key, value]) => (
+          <div key={key} className="bg-gray-50/50 rounded-lg border border-gray-100 p-3">
+            <h4 className="text-xs font-medium text-gray-900 mb-1 capitalize">
+              {key.replace(/_/g, ' ')}
+            </h4>
+            <div className="text-sm">
+              {typeof value === 'string' ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                  {value}
+                </ReactMarkdown>
+              ) : (
+                <pre className="text-xs bg-white p-2 rounded border overflow-auto">
+                  {JSON.stringify(value, null, 2)}
+                </pre>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Fallback to regular markdown
   return (
     <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
       {content}
@@ -199,14 +393,23 @@ const renderAssistantMessage = (content) => {
 export function Messages({ messages, loading, analysisRef }) {
   const hasAssistant = messages.some(m => m.role === 'assistant');
   const endRef = useRef(null);
+  
   useEffect(() => {
     if (analysisRef?.current && analysisRef.current.scrollHeight > 0) {
-      try { analysisRef.current.scrollTo({ top: analysisRef.current.scrollHeight, behavior: 'smooth' }); } catch { /* no-op */ }
+      try { 
+        analysisRef.current.scrollTo({ 
+          top: analysisRef.current.scrollHeight, 
+          behavior: 'smooth' 
+        }); 
+      } catch { 
+        /* no-op */ 
+      }
     }
     if (endRef.current) {
       endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages, loading, analysisRef]);
+
   if (!hasAssistant) return null;
 
   return (
@@ -216,6 +419,7 @@ export function Messages({ messages, loading, analysisRef }) {
           const isUser = m.role === 'user';
           const prevRole = idx > 0 ? messages[idx - 1].role : null;
           const gapClass = prevRole === null ? 'mt-0' : prevRole === m.role ? 'mt-3' : 'mt-6';
+          
           return (
             <div key={idx} className={`${gapClass} flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
               <div className="flex items-center gap-2 mb-1">
@@ -226,7 +430,9 @@ export function Messages({ messages, loading, analysisRef }) {
                     className="h-5 w-5 rounded-full border border-blue-200 shadow"
                   />
                 )}
-                <span className={`text-[10px] tracking-wide ${isUser ? 'text-blue-500' : 'text-blue-700 font-semibold'}`}>{isUser ? 'You' : 'Mike Ross'}</span>
+                <span className={`text-[10px] tracking-wide ${isUser ? 'text-blue-500' : 'text-blue-700 font-semibold'}`}>
+                  {isUser ? 'You' : 'Mike Ross'}
+                </span>
               </div>
               <div
                 className={`group rounded-xl px-4 py-3 md:py-3.5 text-[13px] leading-[1.6] shadow-sm transition-colors max-w-[780px] w-fit ${
@@ -245,7 +451,12 @@ export function Messages({ messages, loading, analysisRef }) {
             </div>
           );
         })}
-        {loading && <p className="mt-4 text-xs text-gray-500 animate-pulse">Thinking...</p>}
+        {loading && (
+          <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
+            <div className="animate-spin h-3 w-3 border border-blue-300 border-t-blue-600 rounded-full"></div>
+            <span className="animate-pulse">Mike Ross is analyzing...</span>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
     </div>
