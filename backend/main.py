@@ -598,11 +598,11 @@ async def analyze_with_precedent_strategist(
     """Analyze legal precedents using Precedent Strategist model"""
     try:
         # Get the session document
-        document = session_manager.get_session_document_metadata(session_id)
+        document = get_session_document_metadata(session_id)
         if not document:
             raise HTTPException(status_code=400, detail="No document uploaded. Please upload a document first.")
         
-        document_content = session_manager.get_session_document_content(session_id)
+        document_content = get_session_document_content(session_id)
         
         if REAL_MODELS_AVAILABLE and mike_ross:
             # Use real Mike Ross Precedent Strategist model
@@ -647,7 +647,7 @@ Analyzing legal precedents relevant to the uploaded document and specific legal 
 **ESTIMATED SUCCESS RATE:** Moderate to High based on document content and precedent alignment
             """
         
-        case_data = create_case_data_simple("precedent-strategist", user_prompt, analysis, case_title)
+        case_data = create_case_data_simple("precedent-strategist", user_prompt, analysis, session_id, case_title)
         
         return {
             "model": "Precedent Strategist",
@@ -681,11 +681,11 @@ async def analyze_dashboard_all_models(
     """
     try:
         # Get the session document
-        document = session_manager.get_session_document_metadata(session_id)
+        document = get_session_document_metadata(session_id)
         if not document:
             raise HTTPException(status_code=400, detail="No document uploaded. Please upload a document first.")
         
-        document_content = session_manager.get_session_document_content(session_id)
+        document_content = get_session_document_content(session_id)
         case_type = document.get('case_type', 'general')
         
         if not REAL_MODELS_AVAILABLE or not mike_ross:
@@ -863,11 +863,11 @@ async def get_case(case_id: str):
 @app.get("/documents/current")
 async def get_current_document(session_id: str = "default_session"):
     """Get the most recently uploaded document info for a session"""
-    document = session_manager.get_session_document_metadata(session_id)
+    document = get_session_document_metadata(session_id)
     if not document:
         raise HTTPException(status_code=404, detail="No document uploaded for this session")
     
-    document_content = session_manager.get_session_document_content(session_id)
+    document_content = get_session_document_content(session_id)
     
     return {
         "filename": document['filename'],
