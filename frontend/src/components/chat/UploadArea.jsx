@@ -29,7 +29,7 @@ export function UploadArea({ dragActive, handleDrag, handleDrop, fileInputRef, h
       {uploadedFiles.length > 0 && (
         <div className="max-h-48 overflow-y-auto space-y-2 sm:space-y-3 pr-1 sm:pr-2">
           {uploadedFiles.map(f => (
-            <div key={f.id} className="flex flex-col sm:flex-row items-center sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200 w-full">
+            <div key={f.id} className="flex flex-row sm:flex-row items-center sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 p-2 sm:p-2 bg-green-50 rounded-lg border border-green-200 w-full">
               <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full"><FileText className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" /></div>
               <div className="flex-1 w-full text-center sm:text-left">
                 <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{f.file.name}</p>

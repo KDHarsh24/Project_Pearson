@@ -23,14 +23,6 @@ export function ModuleBar({ modules = [], selectedModule, setSelectedModule, cas
             </button>
           );
         })}
-        {caseTitle && (
-          <span
-            className="col-span-2 md:col-span-1 md:ml-auto px-2 py-1 bg-gray-100 rounded text-[10px] font-mono border text-gray-700 flex items-center justify-center"
-            title="Case ID"
-          >
-            {caseTitle}
-          </span>
-        )}
       </div>
     </div>
   );
