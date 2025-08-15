@@ -59,52 +59,29 @@ class CaseBreakerModel(MikeRossModelBase):
         doc_meta = {"case_type": case_type, "analysis_type": "case_breaker"}
         
         # Get relevant precedent
-        context = self._get_legal_context(f"{case_type} case law precedent", k_cases=3, k_law=7)
+        context = self._get_legal_context(f"{case_type} case law precedent", k_cases=2, k_law=5)
         
         system_prompt = SystemMessage(content=f"""
-You are Case Breaker, an elite legal strategist. Analyze cases using structured briefing methodology.
+You are Case Analyser, an elite legal strategist AI. Your analysis must be partner-level: brutally honest, concise, and focused on actionable insights. The output MUST be lean to respect token limits.
 
-ANALYSIS FRAMEWORK:
+ANALYSIS FRAMEWORK(be brief):
 
-1. **CASE BRIEF ELEMENTS**
-   - Facts: Key legally relevant facts only
-   - Issues: Substantive legal questions (law + key facts)
-   - Holdings: Court's legal conclusions
-   - Reasoning: Court's analysis and policy rationale
+1.  **Executive Summary & Case Brief (Max 3-4 sentences):**
+    * Succinctly state the core facts, primary legal issue, and the court's likely holding. Do not elaborate.
 
-2. **STRATEGIC ASSESSMENT (PROFESSIONAL)**
-   For each section below, provide:
-   - A numbered list of points
-   - A PRIORITY rating: ★★★★★ (critical) to ★☆☆☆☆ (minor)
-   - Explicit references to facts, dates, or precedent supporting the point
-   - A one-line tactical note on what to do about it
+2.  **Core Strategic Assessment (Bulleted Lists):**
+    * Identify the **Top 3 most advantageous positions (Strengths)**.
+    * Identify the **Top 3 most critical vulnerabilities (Weaknesses)**.
+    * For each point, use a compact format: `-[STRENGTH/WEAKNESS] [PRIORITY: ★★★★★ to ★☆☆☆☆] Point description, citing key facts or precedent. TACTIC: [One-line action item.]`
 
-   **ADVANTAGEOUS POSITIONS**:
-   - Identify the most compelling legal arguments and fact patterns
-   - Highlight precedent that solidly supports these points
-   - Explain why these positions are resilient against counter-arguments
+3.  **Key Contradictions & Inconsistencies:**
+    * List only the **most damaging** factual or legal inconsistencies. If none, state "No critical inconsistencies found."
 
-   **VULNERABLE POSITIONS**:
-   - Pinpoint arguments or facts that expose the case to significant risk
-   - Identify evidentiary gaps, procedural missteps, or adverse precedent
-   - Suggest targeted measures to reinforce or mitigate each vulnerability
+4.  **Top 3 Tactical Recommendations:**
+    * Provide a ranked list of the 3 most urgent actions (e.g., pre-trial motions, targeted discovery).
+    * Briefly state the goal of each recommendation.
 
-   **CONTRADICTIONS**:
-   - List factual, legal, or procedural inconsistencies within the case
-   - Indicate potential exploitation angles for opposing counsel
-   - Propose clarification or reframing strategies
-
-   **PRECEDENT ANALYSIS**:
-   - Explain alignment/deviation from controlling and persuasive precedent
-   - Highlight unique aspects of the case that can be leveraged
-
-3. **TACTICAL RECOMMENDATIONS**
-   - Present a ranked action list to fortify the case before trial
-   - Include pre-trial motions, targeted discovery, or witness preparation
-   - Anticipate 2–3 likely moves from opposing counsel and counter them
-
-Be concise but thorough. Prioritize actionable insights over academic discussion.
-Be brutally honest—highlight even uncomfortable vulnerabilities.
+Adhere strictly to this compact structure. Avoid academic discussion. Prioritize what matters most to winning the case.
 
 RELEVANT LEGAL CONTEXT:
 {context}
@@ -122,8 +99,7 @@ EXTRACTED METADATA:
 
 FULL CASE TEXT:
 {case_text}
-Provide structured analysis following the framework. Prioritize critical vulnerabilities and strongest arguments.4200 tokens is limit
-Execute full-spectrum analysis per partner-level standards. Prioritize actionable insights over academic discussion. Flag all 4-star+ vulnerabilities immediately.
+Provide a highly concise and prioritized analysis following the specified framework. Focus only on the top 3 strengths, top 3 weaknesses, and top 3 tactical recommendations to ensure the full response is generated.
 """)
         
         response = self.chat.invoke([system_prompt, human_prompt])
@@ -138,19 +114,18 @@ Execute full-spectrum analysis per partner-level standards. Prioritize actionabl
         current_section = None
         
         for line in lines:
-            line = line.strip()
-            if any(word in line.lower() for word in ['strength', 'strong', 'advantage']):
+            line_lower = line.lower().strip()
+            if 'advantageous' in line_lower or 'strength' in line_lower:
                 current_section = 'strengths'
-                if '1.' in line or '-' in line or '•' in line:
-                    strengths.append(line)
-            elif any(word in line.lower() for word in ['weakness', 'weak', 'vulnerable', 'risk']):
+                continue
+            elif 'vulnerabilities' in line_lower or 'weakness' in line_lower:
                 current_section = 'weaknesses'
-                if '1.' in line or '-' in line or '•' in line:
-                    weaknesses.append(line)
-            elif current_section == 'strengths' and (line.startswith('-') or line.startswith('•') or any(char.isdigit() for char in line[:3])):
-                strengths.append(line)
-            elif current_section == 'weaknesses' and (line.startswith('-') or line.startswith('•') or any(char.isdigit() for char in line[:3])):
-                weaknesses.append(line)
+                continue
+            if line.strip().startswith('-') or line.strip().startswith('*') or (line.strip() and line.strip()[0].isdigit()):
+                if current_section == 'strengths':
+                    strengths.append(line.strip())
+                elif current_section == 'weaknesses':
+                    weaknesses.append(line.strip())
         
         return {
             "model": self.model_name,
@@ -212,7 +187,7 @@ class ContractXRayModel(MikeRossModelBase):
         context = self._get_legal_context(f"{contract_type} contract law clauses", k_cases=3, k_law=5)
         
         system_prompt = SystemMessage(content=f"""
-You are Contract X-Ray, an expert contract analysis AI specializing in:
+You are Contract Scanner , an expert contract analysis lawyer specializing in:
 - Risk identification and assessment
 - Clause-by-clause analysis  
 - Legal loophole detection
@@ -417,7 +392,7 @@ LEGAL ISSUE: {legal_issue}
 CURRENT CASE:
 {current_case}
 
-Analyze precedent strength and provide strategic recommendations for legal arguments.
+Analyze the precedent landscape and provide a concise strategic approach.
 """)
         
         response = self.chat.invoke([system_prompt, human_prompt])
