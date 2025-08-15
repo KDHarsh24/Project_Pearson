@@ -15,6 +15,7 @@ import {
   RadialLinearScale,
 } from 'chart.js';
 import { Bar, Pie, Line, Doughnut, PolarArea, Radar } from 'react-chartjs-2';
+import logoUrl from '../../image/mikeross.svg';
 
 // Register Chart.js components
 ChartJS.register(
@@ -63,7 +64,7 @@ const mdComponents = {
   ol: ({ children }) => <ol className="list-decimal ml-5 mb-3 space-y-1 marker:text-gray-500">{children}</ol>,
   li: ({ children }) => <li className="pl-1">{children}</li>,
   blockquote: ({ children }) => (
-    <blockquote className="border-l-4 border-blue-300/70 bg-blue-50/60 px-4 py-2 rounded-r-md shadow-sm text-[13px] italic mb-4 last:mb-0">{children}</blockquote>
+  <blockquote className="border-l-4 border-brand-300/70 bg-brand-100/40 px-4 py-2 rounded-r-md shadow-sm text-[13px] italic mb-4 last:mb-0">{children}</blockquote>
   ),
   table: ({ children }) => (
     <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm max-w-full">{children}</div>
@@ -76,7 +77,7 @@ const mdComponents = {
   h2: ({ children }) => <h2 className="mt-2 mb-3 text-[18px] font-semibold tracking-tight text-[#1d4ed8]">{children}</h2>,
   h3: ({ children }) => <h3 className="mt-6 mb-2 text-[14px] font-bold tracking-tight text-gray-700">{children}</h3>,
   a: ({ children, href }) => (
-    <a href={href} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline decoration-[1.5px] underline-offset-2">{children}</a>
+  <a href={href} target="_blank" rel="noreferrer" className="text-brand-500 hover:underline decoration-[1.5px] underline-offset-2">{children}</a>
   ),
   code: CodeBlock
 };
@@ -323,8 +324,8 @@ const renderAssistantMessage = (content) => {
 export function Messages({ messages, loading, analysisRef }) {
   const hasAssistant = messages.some(m => m.role === 'assistant');
   const endRef = useRef(null);
-  
-  const scrollToBottom = (smooth = true) => {
+  // stable callback to satisfy hook deps
+  const scrollToBottom = React.useCallback((smooth = true) => {
     const behavior = smooth ? 'smooth' : 'auto';
     if (endRef.current) {
       try { endRef.current.scrollIntoView({ behavior, block: 'end' }); } catch {}
@@ -332,18 +333,15 @@ export function Messages({ messages, loading, analysisRef }) {
     if (analysisRef?.current) {
       try { analysisRef.current.scrollTop = analysisRef.current.scrollHeight; } catch {}
     }
-  };
+  }, [analysisRef]);
 
-  // Scroll on every messages or loading change (primary)
   useEffect(() => {
     scrollToBottom(true);
-    // Retry a couple times in case of images/charts sizing late
     const timeouts = [50, 150, 350].map(t => setTimeout(() => scrollToBottom(false), t));
     return () => timeouts.forEach(clearTimeout);
-  }, [messages, loading]);
+  }, [messages, loading, scrollToBottom]);
 
-  // Initial mount safety
-  useEffect(() => { scrollToBottom(false); }, []);
+  useEffect(() => { scrollToBottom(false); }, [scrollToBottom]);
 
   if (!hasAssistant) return null;
 
@@ -360,19 +358,19 @@ export function Messages({ messages, loading, analysisRef }) {
               <div className="flex items-center gap-2 mb-1">
                 {!isUser && (
                   <img
-                    src={require('../../image/mikeross.webp')}
+                    src={logoUrl}
                     alt="Mike Ross"
-                    className="h-5 w-5 rounded-full border border-blue-200 shadow"
+                    className="h-5 w-5 rounded-full border border-brand-200 shadow"
                   />
                 )}
-                <span className={`text-[10px] tracking-wide ${isUser ? 'text-blue-500' : 'text-blue-700 font-semibold'}`}>
+                <span className={`text-[10px] tracking-wide ${isUser ? 'text-brand-400' : 'text-brand-500 font-semibold'}`}>
                   {isUser ? 'You' : 'Mike Ross'}
                 </span>
               </div>
               <div
                 className={`group rounded-xl px-4 sm:px-8 py-4 sm:py-6 md:py-3.5 text-[12px] sm:text-[13px] leading-[1.6] shadow-sm transition-colors max-w-full w-fit break-words ${
                   isUser
-                    ? 'bg-gradient-to-tr from-blue-600 to-blue-500 text-white border border-blue-400/50'
+                    ? 'bg-gradient-to-tr from-brand-500 to-brand-400 text-white border border-brand-300/50'
                     : 'bg-white/95 backdrop-blur border border-gray-200'
                 }`}
                 style={isUser ? { borderTopRightRadius: 0, minWidth: '96px' } : { borderTopLeftRadius: 0 }}
@@ -389,16 +387,16 @@ export function Messages({ messages, loading, analysisRef }) {
         {loading && (
           <div className="mt-6 flex flex-col items-start">
             <div className="flex items-center gap-2 mb-1">
-              <img
-                src={require('../../image/mikeross.webp')}
-                alt="Mike Ross"
-                className="h-5 w-5 rounded-full border border-blue-200 shadow"
-              />
-              <span className="text-[10px] text-blue-700 font-semibold">Mike Ross</span>
+                <img
+                  src={require('../../image/mikeross.webp')}
+                  alt="Mike Ross"
+                  className="h-5 w-5 rounded-full border border-brand-200 shadow"
+                />
+                <span className="text-[10px] text-brand-500 font-semibold">Mike Ross</span>
             </div>
             <div className="rounded-xl px-4 py-3 md:py-3.5 text-[13px] leading-[1.6] shadow-sm transition-colors max-w-[780px] w-fit bg-white/95 backdrop-blur border border-gray-200 flex items-center gap-2">
-              <div className="animate-spin h-4 w-4 border-2 border-blue-300 border-t-blue-600 rounded-full mr-2"></div>
-              <span className="animate-pulse text-blue-700 font-medium">Thinking…</span>
+              <div className="animate-spin h-4 w-4 border-2 border-brand-200 border-t-brand-500 rounded-full mr-2"></div>
+              <span className="animate-pulse text-brand-500 font-medium">Thinking…</span>
             </div>
           </div>
         )}

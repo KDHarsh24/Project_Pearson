@@ -11,7 +11,7 @@ export function UploadArea({ dragActive, handleDrag, handleDrop, fileInputRef, h
   return (
     <div className="mb-8 w-full">
       <h2 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Upload Documents {uploadedFiles.length > 0 && `(${uploadedFiles.length})`}</h2>
-      <div className={`border-2 border-dashed rounded-lg p-4 sm:p-8 text-center transition-colors mb-6 w-full ${dragActive ? 'border-blue-500 bg-blue-50':'border-gray-300 hover:border-gray-400'}`}
+  <div className={`border-2 border-dashed rounded-lg p-4 sm:p-8 text-center transition-colors mb-6 w-full ${dragActive ? 'border-brand-400 bg-brand-100/30':'border-gray-300 hover:border-gray-400'}`}
         onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}>
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} accept=".pdf,.doc,.docx,.txt,.md" multiple />
         <div className="space-y-3 sm:space-y-4">
@@ -21,7 +21,7 @@ export function UploadArea({ dragActive, handleDrag, handleDrop, fileInputRef, h
           <div>
             <p className="text-base sm:text-lg font-medium text-gray-900">Drop your documents here</p>
             <p className="text-gray-500 text-xs sm:text-sm">or</p>
-            <button onClick={() => fileInputRef.current?.click()} className="mt-2 px-4 py-2 sm:px-6 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium w-full sm:w-auto">Browse Files</button>
+            <button onClick={() => fileInputRef.current?.click()} className="mt-2 px-4 py-2 sm:px-6 sm:py-2 bg-brand-500 text-white rounded-md hover:bg-brand-400 transition-colors font-medium w-full sm:w-auto">Browse Files</button>
           </div>
           <p className="text-xs text-gray-400">PDF, DOC, DOCX, TXT, MD (Multiple files supported)</p>
         </div>

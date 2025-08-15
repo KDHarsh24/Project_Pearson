@@ -12,8 +12,8 @@ export function ModuleBar({ modules = [], selectedModule, setSelectedModule, cas
               key={m.id}
               type="button"
               onClick={() => setSelectedModule(m.id)}
-              className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-0
-                ${active ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+              className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-300/50 focus:ring-offset-0
+                ${active ? 'bg-brand-500 text-white shadow' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
               aria-pressed={active}
             >
               <span className="truncate">{m.title}</span>

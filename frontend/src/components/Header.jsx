@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import logoUrl from '../image/mikeross.svg';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -33,7 +34,7 @@ export default function Header() {
         <div className={`relative flex items-center justify-center transition-all duration-300 ${scrolled ? 'h-8 w-8' : 'h-9 w-9 sm:h-10 sm:w-10'}`}>
           <div className="absolute inset-0 bg-white/40 backdrop-blur-lg blur-xl rounded-full" />
           <img
-            src={require('../image/mikeross.webp')}
+            src={logoUrl}
             alt="Logo"
             className={`rounded-full border-2 border-white/30 transition-all duration-300 ${scrolled ? 'h-7 w-7' : 'h-8 w-8 sm:h-9 sm:w-9'}`}
             style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.12)) brightness(1.05) saturate(1.15)' }}
@@ -47,7 +48,7 @@ export default function Header() {
             <a
               key={l.href}
               href={l.href}
-              className="px-4 py-2 rounded-md text-gray-700 text-sm font-medium hover:text-blue-700 hover:bg-blue-50/70 transition-colors"
+              className="px-4 py-2 rounded-md text-gray-700 text-sm font-medium hover:text-brand-500 hover:bg-brand-100/40 transition-colors"
             >
               {l.label}
             </a>
@@ -56,7 +57,7 @@ export default function Header() {
         {/* Hamburger menu on far right for mobile */}
         <button
           type="button"
-          className="md:hidden ml-2 inline-flex items-center justify-center h-10 w-10 rounded-full text-gray-600 hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+          className="md:hidden ml-2 inline-flex items-center justify-center h-10 w-10 rounded-full text-gray-600 hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-brand-300/50"
           aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           onClick={() => setMenuOpen(o => !o)}
         >
@@ -88,7 +89,7 @@ export default function Header() {
               key={l.href}
               href={l.href}
               onClick={() => setMenuOpen(false)}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50/80 active:bg-blue-100 transition-colors"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:text-brand-500 hover:bg-brand-100/70 active:bg-brand-100 transition-colors"
             >
               {l.label}
             </a>
