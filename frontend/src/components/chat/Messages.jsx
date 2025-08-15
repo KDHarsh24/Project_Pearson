@@ -58,7 +58,7 @@ function CodeBlock({ inline, className, children, ...props }) {
 
 // Markdown component overrides to tighten spacing & polish look
 const mdComponents = {
-  p: ({ children }) => <p className="mb-2 last:mb-0 leading-[1.55] whitespace-pre-wrap">{children}</p>,
+  p: ({ children }) => <p className="mb-2 last:mb-0 leading-[1.55] whitespace-pre-wrap text-xs sm:text-sm md:text-base">{children}</p>,
   ul: ({ children }) => <ul className="list-disc ml-5 mb-1 space-y-1 marker:text-gray-500">{children}</ul>,
   ol: ({ children }) => <ol className="list-decimal ml-5 mb-3 space-y-1 marker:text-gray-500">{children}</ol>,
   li: ({ children }) => <li className="pl-1">{children}</li>,
@@ -66,7 +66,7 @@ const mdComponents = {
     <blockquote className="border-l-4 border-blue-300/70 bg-blue-50/60 px-4 py-2 rounded-r-md shadow-sm text-[13px] italic mb-4 last:mb-0">{children}</blockquote>
   ),
   table: ({ children }) => (
-    <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">{children}</div>
+    <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm max-w-full">{children}</div>
   ),
   thead: ({ children }) => <thead className="bg-gray-100 text-gray-700">{children}</thead>,
   th: ({ children }) => <th className="text-left text-[12px] font-semibold px-3 py-2 border-b border-gray-200">{children}</th>,
@@ -241,8 +241,8 @@ const renderAssistantMessage = (content) => {
             charts.length === 1 
               ? 'grid-cols-1' 
               : charts.length === 2 
-              ? 'grid-cols-1 lg:grid-cols-2' 
-              : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+              ? 'grid-cols-1 sm:grid-cols-2' 
+              : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
           }`}>
             {charts.map((chart, index) => (
               <ChartComponent key={index} chartData={chart} index={index} />
@@ -349,7 +349,7 @@ export function Messages({ messages, loading, analysisRef }) {
 
   return (
     <div ref={analysisRef} className="mt-4 px-1 md:px-1 pb-2">
-      <div className="flex flex-col max-w-4xl mx-auto">
+  <div className="flex flex-col max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto">
         {messages.map((m, idx) => {
           const isUser = m.role === 'user';
           const prevRole = idx > 0 ? messages[idx - 1].role : null;
@@ -370,12 +370,12 @@ export function Messages({ messages, loading, analysisRef }) {
                 </span>
               </div>
               <div
-                className={`group rounded-xl px-8 py-6 md:py-3.5 text-[13px] leading-[1.6] shadow-sm transition-colors max-w-full w-fit ${
+                className={`group rounded-xl px-4 sm:px-8 py-4 sm:py-6 md:py-3.5 text-[12px] sm:text-[13px] leading-[1.6] shadow-sm transition-colors max-w-full w-fit break-words ${
                   isUser
                     ? 'bg-gradient-to-tr from-blue-600 to-blue-500 text-white border border-blue-400/50'
                     : 'bg-white/95 backdrop-blur border border-gray-200'
                 }`}
-                style={isUser ? { borderTopRightRadius: 0, minWidth: '116px' } : { borderTopLeftRadius: 0 }}
+                style={isUser ? { borderTopRightRadius: 0, minWidth: '96px' } : { borderTopLeftRadius: 0 }}
               >
                 {isUser ? (
                   <span className="whitespace-pre-wrap block">{m.content}</span>
