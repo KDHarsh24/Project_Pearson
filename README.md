@@ -109,7 +109,7 @@ Scoring Example: cosine distance -> intuitive score transformation `score = 1 / 
 ---
 
 ## 9. Environment & Configuration
-Create a `.env` in repo root:
+Create a `.env` in backend folder:
 ```
 WATSONX_API_KEY=
 WATSONX_PROJECT_ID=
