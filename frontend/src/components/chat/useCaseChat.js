@@ -24,9 +24,9 @@ export function useCaseChat() {
 
   const modules = [
     { id: 'analysis', title: 'Case Analyzer', icon: '📊' },
+    { id: 'extract', title: 'Precedent Locator', icon: '🔍' },
     { id: 'summarize', title: 'Contract Scanner', icon: '📝' },
     { id: 'translate', title: 'Deposition Strategist', icon: '🌍' },
-    { id: 'extract', title: 'Precedent Locator', icon: '🔍' }
   ];
 
   const moduleEndpoints = {

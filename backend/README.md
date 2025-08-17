@@ -1,9 +1,29 @@
-# Project Pearson – Mike Ross AI Engine (IBM Techxchange)
+<div align="center">
 
-## 1. Overview
-Agentic RAG system for paralegal intelligence ("Mike Ross"). Focus: high-signal ingestion, enrichment, retrieval, explainable answers (citations).
+# MikeRoss Legal Intelligence Engine  
+IBM TechXchange Hackathon Edition
 
-## 2. Environment (.env)
+Lean, explainable, precedent‑aware legal AI. Four focused expert modules working over a unified multilingual, multi‑jurisdiction embedding fabric (India: IndianKanoon; US: public domain federal sources; Regulatory: NFRA & related bulletins). Built for fast ingestion, auditable enrichment, high‑precision retrieval, and strategy synthesis.
+
+<br/>
+<strong>Use it anywhere:</strong> The engine is transport‑agnostic — drop it behind a simple REST call, wire it into a Telegram bot, Slack / Teams workspace, a lightweight web chat widget, command‑line helper, or your existing internal chat portal. The retrieval + model layer stays the same; only the adapter (small wrapper that forwards user text + session_id and relays the JSON response) changes. This keeps one authoritative legal intelligence core powering every surface without forking logic.
+
+</div>
+
+---
+
+## 1. Mission
+Give a practitioner or analyst an instantly contextual “second chair” that can: surface precedent, isolate risk, map contradictions, and scaffold arguments—without hiding the trail. Every answer is citation‑first and traceable.
+
+## 2. Core Pillars
+* High‑signal ingestion (crawl + upload) with deterministic enrichment
+* Dual‑jurisdiction + regulatory corpus (IndianKanoon, US opinions/statutes, NFRA bulletins) unified at embedding time
+* Hybrid retrieval (semantic + metadata filtering) with provenance bundling
+* Four razor‑scoped expert models instead of one vague generalist
+* Reproducibility & audit: content hashes, metadata, chunk lineage
+
+## 3. Environment (.env)
+Create a `.env` at repo root:
 ```
 WATSONX_API_KEY=
 WATSONX_PROJECT_ID=
@@ -14,83 +34,250 @@ CASE_FILES_COLLECTION=case_files
 SQLITE_PATH=pearson.db
 RAW_STORAGE=storage/raw
 CURATED_STORAGE=storage/curated
+DOC_START_ID=1000000
+DOC_END_ID=1000500
 ```
 
-## 3. Components and Endpoints
-- FastAPI service (`main.py`) – upload, chat (RAG), search, graph, timeline.
-- Crawler / seeder (`app.py`) – ingest public case law.
-- Vector store wrapper (`vectorstores/chroma_store.py`).
-- Document ingestion (`services/document_ingestion.py`).
-- Enrichment (`services/enrichment.py`) – regex-based legal signal.
-- Retrieval (`services/retrieval.py`) – hybrid across case files + case law.
-- Graph (`services/graph_builder.py`) – co-occurrence network.
-- Timeline (`services/timeline.py`) – date event extraction.
-- DB (`db/models.py`, `db/database.py`) – SQLite metadata + chunk index.
+## 4. Data Fabric & Layers
+| Layer | Purpose | Location |
+|-------|---------|----------|
+| Raw | Immutable source text / uploads / crawled HTML strips | `storage/raw` |
+| Vector | Semantic index (Chroma) for `legal_cases`, `case_files`, regulatory | `VECTOR_DB_PATH` |
+| Metadata | SQLite rows for docs + chunk JSON (enrichment) | `pearson.db` |
+| Curated (planned) | Normalized structured legal facts | `storage/curated` |
 
-## 4. Data Lakehouse Layers (hackathon-light)
-- Raw Layer: exact uploads / crawled text (`storage/raw`).
-- Curated Layer: enriched structured metadata (future). Current enrichment persisted in SQLite JSON fields.
-- Vector Layer: Chroma persistent collections (two: case_files, legal_cases).
+## 5. Embeddings & Retrieval
+* Model: IBM watsonx embeddings (single dimensionality across corpora)
+* Pre‑insert: whitespace collapse, conservative lower‑casing (retain citations), L2 normalization
+* Idempotent upsert via content hash; duplicate chunks skipped
+* Distance → human score: `score = 1 / (1 + distance)` (monotonic, intuitive)
+* Hybrid: parallel search on user case files + precedent + regulatory segments, then simple fusion (reciprocal rank / score thresholding)
 
-## 5. Ingestion Flows
-### 5.1 Uploaded Case Files
-1. Upload via `/upload/`.
-2. File hashed; raw bytes saved to Raw layer.
-3. Text extraction (PDF / DOCX / TXT) -> truncate safety.
-4. Document-level enrichment (citations, sections, acts, dates, parties, judges).
-5. Chunking (3000 chars, 250 overlap).
-6. Per-chunk enrichment (local citations/sections) merged into metadata.
-7. Embeddings via WatsonX embeddings model -> Chroma (case_files collection).
-8. Metadata + chunk linkage stored in SQLite.
+### Source Coverage
+| Corpus | Origin | Notes |
+|--------|--------|-------|
+| IndianKanoon | Enumerated `/doc/<id>/` pages | Adaptive throttle to avoid 429s |
+| US Opinions / Statutes | Public domain feeds (extensible) | Section / docket regex hooks |
+| NFRA Bulletins | Regulatory disclosures & enforcement | Parsed into issue_date, entity, section_ref, risk tags |
+| User Files | PDF / DOCX / TXT uploads | Optional digest summarization |
 
-### 5.2 Crawled Case Law
-1. `app.py` crawler hits indiankanoon seed pages.
-2. HTML -> cleaned text.
-3. Same enrichment + chunk pipeline.
-4. Stored in Chroma (legal_cases collection) and SQLite with source url.
+## 6. Enrichment Signals
+Parties, Judges, Acts, Sections, Citations (local + cross‑jurisdiction markers), Dates (normalized), Risk flags (contracts), Clause types, Witness entities.
 
-## 6. Retrieval (RAG)
-`/chat` with `use_rag=true`:
-- Vector search top-k from both collections.
-- Scores transformed from distances; context block assembled with source + snippet.
-- Injected into system message for answer synthesis (citations expected).
+## 7. Four Specialized Models
 
-## 7. Auxiliary Intelligence
-- Entity Graph: aggregate parties / judges / acts / sections for relationship insights.
-- Timeline: normalize and order date mentions per document or overall.
+| Model | Focus | Delivers |
+|-------|-------|----------|
+| Case Breaker | Structural case dissection | Strengths, weaknesses, contradictions, precedent gaps, strategic remediation |
+| Contract X‑Ray | Clause & risk inventory | Risk tiers, missing protections, ambiguity & compliance alerts, redraft suggestions |
+| Deposition Strategist | Witness leverage & questioning | Inconsistencies, credibility pressure points, prioritized questioning funnels, impeachment hooks |
+| Precedent Strategist | Argument architecture | Binding vs persuasive set, adverse isolation, distinguishing factors, counterargument preemption |
 
-## 8. Extensibility Roadmap (Mike Ross Modules)
-1. Case Breaker – add semantic filters (party, act) + contradiction detector.
-2. Contract X-Ray – clause segmentation + risk ruleset + re-draft prompts.
-3. Deposition Strategist – witness dossier aggregation + inconsistency surfacing.
-4. Precedent Strategist – similarity expansion + argument extraction.
+## 8. Flow Diagrams 
 
-## 9. Retrieval Usage
-`POST /chat` form fields: `user_input`, `session_id`, `use_rag` (bool). Optional future: `filters` JSON.
+<div align="center">
+     <img src="flow1.svg" alt="Case Breaker Flow" width="780" style="background:#ffffff; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <br/>
+     <em>Case Analyzer – Structural case dissection and strategic remediation.</em>
+</div>
 
-## 10. Developer Scripts
-- `app.py` – run to crawl & ingest precedent.
-- `run.sh` – environment bootstrap + uvicorn.
+<div align="center">
+     <img src="flow4.svg" alt="Contract X-Ray Flow" width="780" style="background:#ffffff; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <br/>
+     <em>Contract Scanner – Clause & risk inventory, compliance alerts, redraft suggestions.</em>
+</div>
 
-## 11. Enrichment Details
-Regex-based (fast): citations, sections, acts, dates, parties, judges. Per-chunk local citations/sections retained for targeted retrieval and future highlighting.
+<div align="center">
+     <img src="flow2.svg" alt="Deposition Strategist Flow" width="780" style="background:#ffffff; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <br/>
+     <em>Deposition Strategist – Witness leverage, questioning funnels, impeachment hooks.</em>
+</div>
 
-## 12. Quick Start
+<div align="center">
+     <img src="flow3.svg" alt="Precedent Strategist Flow" width="780" style="background:#ffffff; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <br/>
+     <em>Precedent Strategist – Argument architecture, precedent stack, counterargument preemption.</em>
+</div>
+
+## 9. Crawler (IndianKanoon)
+* Enumerates numeric id range (`DOC_START_ID` → `DOC_END_ID`)
+* Adaptive sleep shrinks on success, grows on 429/network anomalies (bounded)
+* Early stop on consecutive misses
+* Minimum word threshold prevents noise ingestion
+
+Run:
 ```
-./run.sh            # create venv, install, start API (port 8000)
-python app.py       # seed legal case law (adjust MAX_PAGES)
-```
-Upload test:
-```
-curl -F "file=@sample.pdf" -F "session_id=abc123" http://localhost:8000/upload/
-```
-Chat with RAG:
-```
-curl -F "user_input=What are key arguments?" -F "session_id=abc123" -F "use_rag=true" http://localhost:8000/chat/
+python app.py
 ```
 
-## 13. API Endpoints (main.py)
-Comprehensive documentation of each FastAPI route including the **4 Mike Ross Specialized Models**.
+## 10. Quick Start (Windows PowerShell)
+```
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+Seed precedent (adjust range in `.env`):
+```
+python app.py
+```
+
+Upload & chat:
+```
+curl -F "file=@case.pdf" -F "session_id=s1" http://localhost:8000/upload/
+curl -F "user_input=Key tenancy arguments?" -F "session_id=s1" -F "use_rag=true" http://localhost:8000/chat/
+```
+
+## 11. Example Model Calls
+```
+curl http://localhost:8000/mike-ross/models
+curl -F "case_text=..." -F "session_id=s1" http://localhost:8000/mike-ross/case-breaker/analyze
+curl -F "contract_text=..." -F "session_id=s1" http://localhost:8000/mike-ross/contract-xray/analyze
+curl -F 'witness_statements=["W1...","W2..."]' -F "session_id=s1" http://localhost:8000/mike-ross/deposition-strategist/analyze-witnesses
+curl -F "current_case=..." -F "legal_issue=tenant rights" -F "session_id=s1" http://localhost:8000/mike-ross/precedent-strategist/analyze
+```
+
+## 12. Observability & Trust
+* Logging of adaptive rate adjustments, embedding errors, ingestion counts
+* Each chunk stores: hash, source url (if precedent), jurisdiction, chunk index, word count
+* Answers cite case IDs / URLs + snippet preview (supports manual verification)
+
+## 13. Extending
+Add new corpus: implement `fetch_<source>.py` → normalize fields → feed shared enrichment → vector insert with `jurisdiction` & `source_type` metadata.
+
+Add new expert model: create endpoint → reuse retrieval layer → craft focused prompt scaffold (avoid overloading existing models).
+
+## 14. Hackathon Angle
+Concise value story: specialized vertical intelligence, transparent reasoning chain, cross‑jurisdiction blend, regulatory infusion (NFRA) and fast path to enterprise hardening (modular services & clear data contracts).
+
+---
+
+## Appendix A – Full API Reference
+(Preserved and periodically updated – derived from `main.py` implementation.)
+
+### A.1 Core Document & Chat Endpoints
+
+#### `POST /upload/`
+Purpose: Ingest a user file, extract text, enrich, chunk, embed into `case_files` vector collection, optionally summarize PDFs into a session digest.
+Form Fields:
+* `file` (required, multipart file)
+* `session_id` (required, string)
+Behaviour:
+* PDF: Extract full text, chunk (3000 chars / 200 overlap), summarize each chunk, build consolidated digest.
+* TXT: Direct ingest.
+* DOCX: (if python-docx installed) extract + ingest.
+* Unsupported types: returns `{ "status": "ignored", "reason": ... }`.
+Responses:
+* Success PDF: `{ "message": str, "pages": <chunks_int> }`
+* Success text: `{ "message": str }`
+* Error: `{ "status": "error", "error": str }`
+Vector Storage: Chroma (persistent at `VECTOR_DB_PATH`).
+Example:
+```
+curl -F "file=@case.pdf" -F "session_id=s1" http://localhost:8000/upload/
+```
+
+#### `POST /chat/`
+Purpose: Conversational interface with optional RAG augmentation.
+Form Fields:
+* `user_input` (required)
+* `session_id` (required)
+* `use_rag` (optional bool, default false)
+Logic:
+* Maintains per-session history in memory.
+* If `use_rag=true`, runs hybrid retrieval across both collections and injects context.
+* If PDF digest exists and `use_rag` is false, uses digest as context.
+Response JSON:
+```
+{ "response": str, "used_digest": bool, "rag": bool }
+```
+Example:
+```
+curl -F "user_input=Summarize the precedent on tenancy" -F "session_id=s1" -F "use_rag=true" http://localhost:8000/chat/
+```
+
+#### `POST /search/`
+Purpose: Direct hybrid search without chat.
+Form Fields:
+* `query` (required)
+* `k_case_files` (int, default 3)
+* `k_case_law` (int, default 3)
+Response:
+```
+{ "case_files": [ {text, metadata, score}... ], "case_law": [...] }
+```
+Example:
+```
+curl -F "query=land reform occupancy rights" http://localhost:8000/search/
+```
+
+### A.2 Analysis & Intelligence Endpoints
+
+#### `GET /graph/entities`
+Purpose: Lightweight co-occurrence graph of entities.
+Query: `limit` (default 25)
+Response: `{ nodes: [...], edges: [...], entity_fields: [...] }`
+
+#### `GET /timeline`
+Purpose: Chronological event timeline per document or aggregate.
+Optional Query: `filename`, `doc_hash`
+
+### A.3 Specialized Models
+
+#### `GET /mike-ross/models`
+Lists available models & capabilities.
+
+##### Case Breaker
+`POST /mike-ross/case-breaker/analyze` – Strengths, weaknesses, contradictions, precedent gaps, strategy.
+`POST /mike-ross/case-breaker/contradictions` – Compare two documents for conflicts.
+
+##### Contract X-Ray
+`POST /mike-ross/contract-xray/analyze` – Risk & clause assessment.
+`POST /mike-ross/contract-xray/clauses` – Extract & classify clauses with risk.
+
+##### Deposition Strategist
+`POST /mike-ross/deposition-strategist/analyze-witnesses` – Multi‑statement inconsistency & leverage.
+`POST /mike-ross/deposition-strategist/questions` – Targeted question generation.
+
+##### Precedent Strategist
+`POST /mike-ross/precedent-strategist/analyze` – Precedent stack & distinguishing.
+`POST /mike-ross/precedent-strategist/arguments` – Structured argument crafting.
+
+### A.4 Hybrid Retrieval (Internal)
+Triggered by `/chat` when `use_rag=true`, `/search/`, and model endpoints. Parallel queries; metadata & provenance returned; distance → score mapping documented above.
+
+### A.5 Root & Errors
+`GET /` – health.  
+Errors: ingestion/model failures return JSON with `status` or `error`; skipped unsupported files marked `ignored`.
+
+### A.6 Session & State
+Ephemeral: chat history + PDF digest.  
+Persistent: raw files, vectors, SQLite metadata.
+
+### A.7 Adding a New Endpoint
+1. Implement in `main.py`  
+2. Reuse `ChromaVectorStore`  
+3. Add focused prompt & guardrails  
+4. Update README Appendix.
+
+---
+
+## Appendix B – Status Snapshot
+* 4 expert models implemented
+* IndianKanoon crawler with adaptive rate
+* Multi‑collection hybrid retrieval
+* Enrichment & provenance fields stored
+* Ready for hackathon demo & extension
+
+---
+
+## License / Attribution
+Public domain / open legal sources (IndianKanoon references, US public domain opinions, NFRA bulletins). Ensure compliance with each source’s reuse guidance. This project itself: (add license file if needed).
+
+---
+
+End of README.
+
 
 ### 13.1 Core Document & Chat Endpoints
 

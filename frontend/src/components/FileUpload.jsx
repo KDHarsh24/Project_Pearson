@@ -59,7 +59,7 @@ export default function DocumentUploadPage() {
 
   const uploadDocument = async (file) => {
     try {
-      let active = localStorage.getItem('case_title');
+      let active = false;
       if (!active) {
         const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
         active = `case-guid-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
@@ -69,6 +69,8 @@ export default function DocumentUploadPage() {
       formData.append('file', file);
       formData.append('case_title', active);
       formData.append('case_type', caseType);
+      formData.append('session_id', active);
+      localStorage.setItem('session_id', active);
       const res = await fetch(apiJoin('/upload-document'), { method: 'POST', body: formData });
       if (!res.ok) throw new Error('Upload failed');
       const data = await res.json();

@@ -20,9 +20,6 @@ export function ModuleBar({ modules = [], selectedModule, setSelectedModule, cas
             </button>
           );
         })}
-        {caseTitle && (
-          <span className="ml-4 text-xs font-semibold text-gray-600 px-3 py-1.5 whitespace-nowrap">{caseTitle}</span>
-        )}
       </div>
     </div>
   );
