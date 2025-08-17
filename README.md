@@ -45,6 +45,10 @@ Time Freed (Indicative): 50%+ of low‑leverage reading hours → redeployed to 
 
 Technologies: FastAPI, Chroma persistent store, SQLite metadata registry, IBM watsonx.ai Granite & embedding models, regex + (extensible) NLP enrichment.
 
+<div align="center">
+     <img src="flow.jpg" alt="Contract X-Ray Flow" width="780" style="background:white; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <br/>
+</div>
 ---
 
 ## 4. The Four Mike Ross Agents

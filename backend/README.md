@@ -76,27 +76,27 @@ Parties, Judges, Acts, Sections, Citations (local + cross‑jurisdiction markers
 ## 8. Flow Diagrams 
 
 <div align="center">
-     <img src="flow1.svg" alt="Case Breaker Flow" width="780" style="background:#ffffff; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <img src="flow1.jpg" alt="Case Breaker Flow" width="780" style="background:white; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
      <br/>
      <em>Case Analyzer – Structural case dissection and strategic remediation.</em>
 </div>
 
 <div align="center">
-     <img src="flow4.svg" alt="Contract X-Ray Flow" width="780" style="background:#ffffff; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <img src="flow2.jpg" alt="Contract X-Ray Flow" width="780" style="background:white; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
      <br/>
      <em>Contract Scanner – Clause & risk inventory, compliance alerts, redraft suggestions.</em>
 </div>
 
 <div align="center">
-     <img src="flow2.svg" alt="Deposition Strategist Flow" width="780" style="background:#ffffff; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <img src="flow4.jpg" alt="Deposition Strategist Flow" width="780" style="background:white; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
      <br/>
      <em>Deposition Strategist – Witness leverage, questioning funnels, impeachment hooks.</em>
 </div>
 
 <div align="center">
-     <img src="flow3.svg" alt="Precedent Strategist Flow" width="780" style="background:#ffffff; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
+     <img src="flow3.jpg" alt="Precedent Strategist Flow" width="780" style="background:white; padding:14px 18px; border:1px solid #e5e7eb; border-radius:20px; box-shadow:0 4px 14px rgba(0,0,0,0.08);" />
      <br/>
-     <em>Precedent Strategist – Argument architecture, precedent stack, counterargument preemption.</em>
+     <em>Precedent locator – Argument architecture, precedent stack, counterargument preemption.</em>
 </div>
 
 ## 9. Crawler (IndianKanoon)
