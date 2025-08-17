@@ -1,6 +1,6 @@
 <div align="center">
 
-# Project Pearson – Mike Ross AI Engine
+# Mike Ross AI Engine
 IBM TechXchange Hackathon 2025
 
 <strong>“Put Mike Ross from Suits in your pocket.”</strong><br/>
